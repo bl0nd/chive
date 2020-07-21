@@ -46,7 +46,7 @@ add_targets() {
         mkdir -p "${CONFIG_DIR}/${target}"
     done
 
-    (cd "$CONFIG_DIR" && exa -1 -L 0 -D . 2>/dev/null | GREP_COLORS='cx=1;34' grep --color -E "^$(tr ' ' '|' <<< $*)$" -A100 -B100)
+    (cd "$CONFIG_DIR" && exa -1 -D . 2>/dev/null | GREP_COLORS='cx=1;34' grep --color -E "^$(tr ' ' '|' <<< $*)$" -A100 -B100)
 }
 
 list_templates() {
