@@ -9,6 +9,12 @@ CONFIG_DIR="${XDG_CONFIG_HOME}/${PROG_NAME}"
 LC_ALL=C
 LANG=C
 
+[[ -d "$CONFIG_DIR" ]] && {
+    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | rev | cut -d/ -f1 | rev)"
+}
+
+
+
 usage() {
     printf "%s\n" "\
 usage: ch [--version] [--help] [--add|-a TARGET ...]
@@ -26,25 +32,30 @@ add_targets() {
     shift
     IFS=' ' read -r -a targets <<< $*
 
-    templates="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | rev | cut -d/ -f1 | rev)"
-
     for target in "${targets[@]}"; do
         if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' 'ch: targets must start with a letter or number' 1>&2
+            printf '%s\n' "$PROG_NAME: \"$target\" does not start with a letter/number" 1>&2
             exit 1
         elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' 'ch: targets may only contain letters, numbers, "_", or "-"' 1>&2
+            printf '%s\n' "$PROG_NAME: targets may only contain letters, numbers, \"_\", or \"-\"" 1>&2
             exit 1
         elif grep -m 1 -q ^"$target"$ <<< "$templates"; then
-            printf '%s\n' "ch: \"${target}\" is a template name" 1>&2
+            printf '%s\n' "$PROG_NAME: \"${target}\" is a template name" 1>&2
             exit 1
         elif [[ -d "${CONFIG_DIR}/${target}" ]]; then
-            printf '%s\n' "ch: skipping \"$target\"" 1>&2
+            printf '%s\n' "$PROG_NAME: skipping \"$target\"" 1>&2
             continue
         fi
 
         mkdir -p "${CONFIG_DIR}/${target}"
     done
+}
+
+list_templates() {
+    if (( "$#" == 0 )); then
+        targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | rev | cut -d/ -f1 | rev)"
+        cd "$CONFIG_DIR" && exa -T -L 1 -x $targets || cd -
+    fi
 }
 
 main() {
@@ -66,12 +77,19 @@ main() {
             ;;
 
             "--template" | "-t")
+                #add_templates "$@"
                 exit
+            ;;
+
+            *)
+                break
             ;;
         esac
 
         shift
     done
+
+    list_templates "$@"
 }
 
 main "$@"
