@@ -121,7 +121,13 @@ add_templates() {
 
     # if nothing is redirected to our stdin, create empty templates
     if test -t 0; then
-        for target in "${targets[@]}"; do
+        if [[ "${#targets}" -eq 0 ]]; then
+            arr=( "${all_targets[@]}" )
+        else
+            arr=( "${targets[@]}" )
+        fi
+
+        for target in "${arr[@]}"; do
             for template in "${templates[@]}"; do
                 touch "${CONFIG_DIR}/${target}/${template}"
             done
