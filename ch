@@ -36,9 +36,9 @@ add_targets() {
             printf '%s\n' 'ch: targets may only contain letters, numbers, "_", or "-"' 1>&2
             exit 1
         elif grep -m 1 -q ^"$target"$ <<< "$templates"; then
-            printf '%s\n' "ch: \"$target\" is a template name" 1>&2
+            printf '%s\n' "ch: \"${target}\" is a template name" 1>&2
             exit 1
-        elif [[ -d "${CONFIG_DIR}/$target" ]]; then
+        elif [[ -d "${CONFIG_DIR}/${target}" ]]; then
             printf '%s\n' "ch: skipping \"$target\"" 1>&2
             continue
         fi
@@ -47,7 +47,11 @@ add_targets() {
     done
 }
 
-get_args() {
+main() {
+    [[ ! -d "$CONFIG_DIR" ]] && {
+        mkdir -p "${XDG_CONFIG_HOME}/${PROG_NAME}"
+    }
+
     while [[ "$1" ]]; do
         case $1 in
             "--version")
@@ -58,23 +62,16 @@ get_args() {
 
             "--add" | "-a")
                 add_targets "$@"
-                break
+                exit
             ;;
 
             "--template" | "-t")
+                exit
             ;;
         esac
 
         shift
     done
-}
-
-main() {
-    [[ ! -d "$CONFIG_DIR" ]] && {
-        mkdir -p "${XDG_CONFIG_HOME}/${PROG_NAME}"
-    }
-
-    get_args "$@"
 }
 
 main "$@"
