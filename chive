@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+
+PROG_NAME="chive"
+VERSION="0.1.0"
+
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
+CONFIG_DIR="${XDG_CONFIG_HOME}/${PROG_NAME}"
+
+# Speed up script by not using unicode.
+LC_ALL=C
+LANG=C
+
+[[ -d "$CONFIG_DIR" ]] && {
+    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | rev | cut -d/ -f1 | rev)"
+}
+
+usage() {
+    printf "%s\n" "\
+usage: chive [--version] [--help] [--edit|-e] [--list|-l ] [--check|-c]
+             [--add|-a TARGET ...] [--template|-t TARGET|TEMPLATE]
+             [[TARGET ...] TEMPLATE] ...
+
+Options:
+
+   -a, -add TARGET ...          add targets
+   -t, --template TEMPLATE ...  add templates
+   -e, --edit TEMPLATE ...      edit templates
+   -l, --list TEMPLATE ...      list templates
+   -c, --check TEMPLATE ...     check templates
+
+   --help                       show version information of $PROG_NAME
+   --version                    show this help and exit
+"
+    exit 1
+}
+
+color_tree() {
+    GREP_COLORS='sl=1;30:ms=01;34' grep --color '[^├─│└─]'
+}
+
+add_targets() {
+    (( "$#" == 1 )) && {
+        printf '%s\n' "error: no targets specified" 1>&2
+        exit 1
+    }
+
+    shift
+    IFS=' ' read -r -a targets <<< $*
+    new_targets=()
+
+    for target in "${targets[@]}"; do
+        if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
+            printf '%s\n' "error: \"$target\" does not start with a letter/number" 1>&2
+            exit 1
+        elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+            printf '%s\n' "error: targets may only contain letters, numbers, \"_\", or \"-\"" 1>&2
+            exit 1
+        elif grep -m 1 -q ^"$target"$ <<< "$TEMPLATES"; then
+            printf '%s\n' "error: \"${target}\" is a template name" 1>&2
+            exit 1
+        fi
+
+        [[ ! -d "${CONFIG_DIR}"/"${target}" ]] && {
+            mkdir -p "${CONFIG_DIR}/${target}"
+            new_targets+=("$target")
+        }
+    done
+
+    if (( "${#new_targets}" == 0 )); then
+        pattern="^($(tr ' ' '|' <<< "$@"))$"
+        (cd "$CONFIG_DIR" && exa -1 -D)
+    else
+        pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
+        (cd "$CONFIG_DIR" && exa -1 -D | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
+    fi
+}
+
+list_templates() {
+    if (( "$#" == 0 )); then
+        (cd "$CONFIG_DIR" && tree -d --charset=utf-8 --noreport -- * | color_tree)
+    else
+        for target in "$@"; do
+            [[ ! "$(ls -D "$CONFIG_DIR")" =~ $target ]] && {
+                printf '%s\n' "error: unknown target \"$target\"" 1>&2
+                exit 1
+            }
+        done
+
+        (cd "$CONFIG_DIR" && tree -d -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
+    fi
+}
+
+main() {
+    [[ ! -d "$CONFIG_DIR" ]] && {
+        mkdir -p "${XDG_CONFIG_HOME}/${PROG_NAME}"
+    }
+
+    while [[ "$1" ]]; do
+        case $1 in
+            "--version")
+                printf '%s\n' "$PROG_NAME $VERSION"
+                exit 1
+            ;;
+            "--help") usage ;;
+
+            "--add" | "-a")
+                add_targets "$@"
+                exit
+            ;;
+
+            "--template" | "-t")
+                #add_templates "$@"
+                exit
+            ;;
+
+            "--edit" | "-e")
+                EDIT=1
+            ;;
+
+            "--check" | "-c")
+                check_templates "$@"
+                exit
+            ;;
+
+            "--list" | "-l")
+                list_templates "$@"
+                exit
+            ;;
+
+            *)
+                break
+            ;;
+        esac
+
+        shift
+    done
+
+    list_templates "$@"
+}
+
+main "$@"
