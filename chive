@@ -68,10 +68,12 @@ add_targets() {
 
     if (( "${#new_targets}" == 0 )); then
         pattern="^($(tr ' ' '|' <<< "$@"))$"
-        (cd "$CONFIG_DIR" && exa -1 -D)
+        (cd "$CONFIG_DIR" &&
+         ls -1 -d -- */ |
+         sed 's/.$//')
     else
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
-        (cd "$CONFIG_DIR" && exa -1 -D | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
+        (cd "$CONFIG_DIR" && ls -1 | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
     fi
 }
 
