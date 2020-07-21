@@ -13,8 +13,6 @@ LANG=C
     TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | rev | cut -d/ -f1 | rev)"
 }
 
-
-
 usage() {
     printf "%s\n" "\
 usage: ch [--version] [--help] [--add|-a TARGET ...]
@@ -25,7 +23,7 @@ usage: ch [--version] [--help] [--add|-a TARGET ...]
 
 add_targets() {
     (( "$#" == 1 )) && {
-        printf '%s\n' 'ch: no targets specified' 1>&2
+        printf '%s\n' "$PROG_NAME: no targets specified" 1>&2
         exit 1
     }
 
@@ -53,8 +51,16 @@ add_targets() {
 
 list_templates() {
     if (( "$#" == 0 )); then
-        targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | rev | cut -d/ -f1 | rev)"
-        cd "$CONFIG_DIR" && exa -T -L 1 -x $targets || cd -
+        cd "$CONFIG_DIR" && exa -T -L 1 -D -- *; cd - > /dev/null
+    else
+        for target in "$@"; do
+            [[ ! "$(exa -L 1 -D "$CONFIG_DIR")" =~ $target ]] && {
+                printf '%s\n' "$PROG_NAME: unknown target \"$target\"" 1>&2
+                exit 1
+            }
+        done
+
+        cd "$CONFIG_DIR" && exa -T -L 1 -D -- "$@" 2>/dev/null; cd - > /dev/null
     fi
 }
 
