@@ -1,3 +1,3 @@
-# ch
+# Chive
 
-Replaces sections of text.
+Variant switcher.
