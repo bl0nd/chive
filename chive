@@ -91,6 +91,16 @@ list_templates() {
     fi
 }
 
+add_templates() {
+    (( "$#" == 1 )) && {
+        printf '%s\n' "error: no templates specified" 1>&2
+        exit 1
+    }
+
+    shift
+    IFS=' ' read -r -a templates <<< "$*"
+}
+
 main() {
     [[ ! -d "$CONFIG_DIR" ]] && {
         mkdir -p "${XDG_CONFIG_HOME}/${PROG_NAME}"
@@ -110,7 +120,7 @@ main() {
             ;;
 
             "--template" | "-t")
-                #add_templates "$@"
+                add_templates "$@"
                 exit
             ;;
 
