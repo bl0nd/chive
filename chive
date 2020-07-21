@@ -11,7 +11,7 @@ LC_ALL=C
 LANG=C
 
 [[ -d "$CONFIG_DIR" ]] && {
-    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | rev | cut -d/ -f1 | rev)"
+    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | awk -F/ '{print $NF}')"
 }
 
 usage() {
@@ -68,9 +68,7 @@ add_targets() {
 
     if (( "${#new_targets}" == 0 )); then
         pattern="^($(tr ' ' '|' <<< "$@"))$"
-        (cd "$CONFIG_DIR" &&
-         ls -1 -d -- */ |
-         sed 's/.$//')
+        (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//')
     else
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
         (cd "$CONFIG_DIR" && ls -1 | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
@@ -85,7 +83,7 @@ list_templates() {
 
         if [[ -n "$matches" ]]; then
             error="$(cut -d: -f1 <<< "$matches" | tr '\n' ' ' | sed 's/[ ]*$//' | xargs printf '"%s", ')"
-            printf 'error: unknown targets (%s)\n' "${error%, }" 1>&2
+            printf 'error: unknown targets %s\n' "${error%, }" 1>&2
             exit 1
         fi
 
