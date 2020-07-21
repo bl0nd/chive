@@ -78,8 +78,20 @@ add_targets() {
     fi
 }
 
-list_templates() {
-    local matches
+# This is the start of the main program:
+#
+#  * If there is an existing template specified, then we assume we want to set
+#    templates.
+#
+#  * If there is an non-existing template specified, then we error out assuming
+#    the user wanted to see templates of a particular target.
+#
+#  * If there is only targets, show templates for them.
+#
+#  * If there is nothing, show all templates.
+go() {
+    local failed_targets
+    local failed_templates
     local error
 
     if (( "$#" == 0 )); then
@@ -95,15 +107,25 @@ list_templates() {
             fi
         done
 
-        matches="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open")"
+        failed_targets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
 
-        if [[ -n "$matches" ]]; then
-            error="$(cut -d: -f1 <<< "$matches" | tr '\n' ' ' | sed 's/[ ]*$//' | xargs printf '"%s", ')"
-            printf 'error: unknown targets %s.\n' "${error%, }" 1>&2
-            exit 1
+        if [[ -z "$failed_targets" ]]; then
+            # only targets were specified, so list their templates
+            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
+        else
+            # some names failed, so check and see if they're template names
+            failed_targets="$(tr '\n' ' ' <<< "${failed_targets}" | sed 's/[ ]*$//')"
+            failed_templates="$(cd "$CONFIG_DIR" && file -- */${failed_targets[*]} | grep "cannot open" | cut -d: -f1)"
+
+            if [[ -n "$failed_templates" ]]; then
+                # the names were not targets or templates so abort
+                error="$(tr '\n' ' ' <<< "$failed_templates" | sed 's/[ ]*$//' | xargs printf '"%s", ' | sed 's/\*\///')"
+                printf 'error: unknown targets %s.\n' "${error%, }" 1>&2
+                exit 1
+            fi
+
+            # there was a template name, so set target templates accordingly
         fi
-
-        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
     fi
 }
 
@@ -219,7 +241,7 @@ main() {
         shift
     done
 
-    list_templates "$@"
+    go "$@"
 }
 
 main "$@"
