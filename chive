@@ -81,12 +81,13 @@ list_templates() {
     if (( "$#" == 0 )); then
         (cd "$CONFIG_DIR" && tree -d --charset=utf-8 --noreport -- * | color_tree)
     else
-        for target in "$@"; do
-            [[ ! "$(ls -D "$CONFIG_DIR")" =~ $target ]] && {
-                printf '%s\n' "error: unknown target \"$target\"" 1>&2
-                exit 1
-            }
-        done
+        matches="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open")"
+
+        if [[ -n "$matches" ]]; then
+            error="$(cut -d: -f1 <<< "$matches" | tr '\n' ' ' | sed 's/[ ]*$//' | xargs printf '"%s", ')"
+            printf 'error: unknown targets (%s)\n' "${error%, }" 1>&2
+            exit 1
+        fi
 
         (cd "$CONFIG_DIR" && tree -d -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
     fi
