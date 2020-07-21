@@ -38,6 +38,10 @@ color_tree() {
     GREP_COLORS='sl=1;30:ms=01;34' grep --color '[^├─│└─]'
 }
 
+nltospace() {
+    tr '\n' ' ' <<< "$1"
+}
+
 add_targets() {
     local targets
     local new_targets
@@ -114,12 +118,12 @@ go() {
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
         else
             # some names failed, so check and see if they're template names
-            failed_targets="$(tr '\n' ' ' <<< "${failed_targets}" | sed 's/[ ]*$//')"
+            failed_targets="$(nltospace "${failed_targets}" | sed 's/[ ]*$//')"
             failed_templates="$(cd "$CONFIG_DIR" && file -- */${failed_targets[*]} | grep "cannot open" | cut -d: -f1)"
 
             if [[ -n "$failed_templates" ]]; then
                 # the names were not targets or templates so abort
-                error="$(tr '\n' ' ' <<< "$failed_templates" | sed 's/[ ]*$//' | xargs printf '"%s", ' | sed 's/\*\///')"
+                error="$(nltospace "$failed_templates" | sed 's/[ ]*$//' | xargs printf '"%s", ' | sed 's/\*\///')"
                 printf 'error: unknown targets %s.\n' "${error%, }" 1>&2
                 exit 1
             fi
