@@ -11,7 +11,7 @@ LC_ALL=C
 LANG=C
 
 [[ -d "$CONFIG_DIR" ]] && {
-    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -type d ! -path "${CONFIG_DIR}/.git/*" | awk -F/ '{print $NF}')"
+    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
 }
 
 usage() {
