@@ -41,6 +41,7 @@ add_targets() {
 
     shift
     IFS=' ' read -r -a targets <<< $*
+    new_targets=()
 
     for target in "${targets[@]}"; do
         if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
@@ -54,10 +55,19 @@ add_targets() {
             exit 1
         fi
 
-        mkdir -p "${CONFIG_DIR}/${target}"
+        [[ ! -d "${CONFIG_DIR}"/"${target}" ]] && {
+            mkdir -p "${CONFIG_DIR}/${target}"
+            new_targets+=("$target")
+        }
     done
 
-    (cd "$CONFIG_DIR" && exa -1 -D . 2>/dev/null | GREP_COLORS='cx=1;34' grep --color -E "^$(tr ' ' '|' <<< $*)$" -A100 -B100)
+    if (( "${#new_targets}" == 0 )); then
+        pattern="^($(tr ' ' '|' <<< "$@"))$"
+        (cd "$CONFIG_DIR" && exa -1 -D)
+    else
+        pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
+        (cd "$CONFIG_DIR" && exa -1 -D | GREP_COLORS='cx=1;34' grep --color -E "$pattern" -A100 -B100)
+    fi
 }
 
 list_templates() {
@@ -95,6 +105,20 @@ main() {
 
             "--template" | "-t")
                 #add_templates "$@"
+                exit
+            ;;
+
+            "--edit" | "-e")
+                EDIT=1
+            ;;
+
+            "--check" | "-c")
+                check_templates "$@"
+                exit
+            ;;
+
+            "--list" | "-l")
+                list_templates "$@"
                 exit
             ;;
 
