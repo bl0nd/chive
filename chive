@@ -98,32 +98,36 @@ add_templates() {
     }
 
     shift
+    IFS=' ' read -r -a all_templates <<< "$*"
 
+    declare all_targets
     declare targets
-    targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
+    all_targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
+    targets=()
 
-    IFS=' ' read -r -a templates <<< "$*"
-
-    for template in "${templates[@]}"; do
+    for template in "${all_templates[@]}"; do
         if [[ ! $template =~ ^[[:alnum:]](.*) ]]; then
             printf '%s\n' "error: \"$template\" does not start with a letter or number." 1>&2
             exit 1
         elif [[ ! $template =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
             printf '%s\n' "error: templates may only contain letters, numbers, \"_\", or \"-\"." 1>&2
             exit 1
-        elif grep -m 1 -q ^"$template"$ <<< "$targets"; then
-            printf '%s\n' "error: \"${template}\" is a target name." 1>&2
-            exit 1
+        elif grep -m 1 -q ^"$template"$ <<< "$all_targets"; then
+            targets+=("$template")
+        else
+            templates+=("$template")
         fi
     done
 
     # if nothing is redirected to our stdin, create empty templates
     if test -t 0; then
-        #echo "${templates[@]}"
-        echo
+        for target in "${targets[@]}"; do
+            for template in "${templates[@]}"; do
+                touch "${CONFIG_DIR}/${target}/${template}"
+            done
+        done
     else
-        #echo "got stdin"
-        echo
+        echo "stdin"
     fi
 }
 
