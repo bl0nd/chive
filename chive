@@ -54,13 +54,13 @@ add_targets() {
 
     for target in "${targets[@]}"; do
         if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: \"$target\" does not start with a letter/number" 1>&2
+            printf '%s\n' "error: target \"$target\" does not start with a letter/number." 1>&2
             exit 1
         elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: targets may only contain letters, numbers, \"_\", or \"-\"" 1>&2
+            printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
             exit 1
         elif grep -m 1 -q ^"$target"$ <<< "$TEMPLATES"; then
-            printf '%s\n' "error: \"${target}\" is a template name" 1>&2
+            printf '%s\n' "error: \"${target}\" is a template name." 1>&2
             exit 1
         fi
 
@@ -86,11 +86,21 @@ list_templates() {
     if (( "$#" == 0 )); then
         (cd "$CONFIG_DIR" && tree -d --charset=utf-8 --noreport -- * | color_tree)
     else
+        for target in "${@}"; do
+            if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
+                printf '%s\n' "error: target \"$target\" does not start with a letter/number." 1>&2
+                exit 1
+            elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+                printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
+                exit 1
+            fi
+        done
+
         matches="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open")"
 
         if [[ -n "$matches" ]]; then
             error="$(cut -d: -f1 <<< "$matches" | tr '\n' ' ' | sed 's/[ ]*$//' | xargs printf '"%s", ')"
-            printf 'error: unknown targets %s\n' "${error%, }" 1>&2
+            printf 'error: unknown targets %s.\n' "${error%, }" 1>&2
             exit 1
         fi
 
@@ -118,10 +128,10 @@ add_templates() {
 
     for template in "${all_templates[@]}"; do
         if [[ ! $template =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: \"$template\" does not start with a letter or number." 1>&2
+            printf '%s\n' "error: template \"$template\" does not start with a letter/number." 1>&2
             exit 1
         elif [[ ! $template =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: templates may only contain letters, numbers, \"_\", or \"-\"." 1>&2
+            printf '%s\n' "error: template \"$template\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
             exit 1
         elif grep -m 1 -q ^"$template"$ <<< "$all_targets"; then
             targets+=("$template")
