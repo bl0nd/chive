@@ -39,6 +39,10 @@ color_tree() {
 }
 
 add_targets() {
+    local targets
+    local new_targets
+    local pattern
+
     (( "$#" == 1 )) && {
         printf '%s\n' "error: no targets specified" 1>&2
         exit 1
@@ -76,6 +80,9 @@ add_targets() {
 }
 
 list_templates() {
+    local matches
+    local error
+
     if (( "$#" == 0 )); then
         (cd "$CONFIG_DIR" && tree -d --charset=utf-8 --noreport -- * | color_tree)
     else
@@ -92,6 +99,12 @@ list_templates() {
 }
 
 add_templates() {
+    local all_templates
+    local all_targets
+    local targets
+    local templates
+    local arr
+
     (( "$#" == 1 )) && {
         printf '%s\n' "error: no templates specified" 1>&2
         exit 1
@@ -100,8 +113,6 @@ add_templates() {
     shift
     IFS=' ' read -r -a all_templates <<< "$*"
 
-    declare all_targets
-    declare targets
     all_targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
     targets=()
 
@@ -119,22 +130,39 @@ add_templates() {
         fi
     done
 
-    # if nothing is redirected to our stdin, create empty templates
-    if test -t 0; then
-        if [[ "${#targets}" -eq 0 ]]; then
-            arr=( "${all_targets[@]}" )
-        else
-            arr=( "${targets[@]}" )
-        fi
-
-        for target in "${arr[@]}"; do
-            for template in "${templates[@]}"; do
-                touch "${CONFIG_DIR}/${target}/${template}"
-            done
-        done
+    # if no targets are specified, create templates for all targets
+    if [[ "${#targets}" -eq 0 ]]; then
+        arr=($all_targets)
+        create_templates "${arr[@]}"
     else
-        echo "stdin"
+        create_templates "${targets[@]}"
     fi
+}
+
+create_templates() {
+    local ref
+    local custom_template
+    local path
+
+    ref=("$@")
+
+    if ! test -t 0; then
+        custom_template=$(</dev/stdin)
+    fi
+
+    for target in "${ref[@]}"; do
+        for template in "${templates[@]}"; do
+            path="${CONFIG_DIR}/${target}/${template}"
+
+            if test -t 0; then
+                # if nothing is going to our stdin, create empty templates
+                touch "$path"
+            elif [[ ! -f "$path" ]]; then
+                # use stdin as content for templates
+                printf '%s\n' "$custom_template" > "$path"
+            fi
+        done
+    done
 }
 
 main() {
