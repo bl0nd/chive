@@ -84,7 +84,7 @@ list_templates() {
     local error
 
     if (( "$#" == 0 )); then
-        (cd "$CONFIG_DIR" && tree -d --charset=utf-8 --noreport -- * | color_tree)
+        (cd "$CONFIG_DIR" && tree --charset=utf-8 --noreport -- * | color_tree)
     else
         for target in "${@}"; do
             if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
@@ -104,7 +104,7 @@ list_templates() {
             exit 1
         fi
 
-        (cd "$CONFIG_DIR" && tree -d -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
+        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
     fi
 }
 
