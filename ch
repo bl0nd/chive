@@ -60,7 +60,7 @@ list_templates() {
             }
         done
 
-        cd "$CONFIG_DIR" && exa -T -L 1 -D -- "$@" 2>/dev/null; cd - > /dev/null
+        (cd "$CONFIG_DIR" && exa -T -L 1 -D -- "$@" 2>/dev/null)
     fi
 }
 
