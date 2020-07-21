@@ -2,6 +2,7 @@
 
 PROG_NAME="ch"
 VERSION="0.1.0"
+
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
 CONFIG_DIR="${XDG_CONFIG_HOME}/${PROG_NAME}"
 
@@ -23,7 +24,7 @@ usage: ch [--version] [--help] [--add|-a TARGET ...]
 
 add_targets() {
     (( "$#" == 1 )) && {
-        printf '%s\n' "$PROG_NAME: no targets specified" 1>&2
+        printf '%s\n' "error: no targets specified" 1>&2
         exit 1
     }
 
@@ -32,30 +33,29 @@ add_targets() {
 
     for target in "${targets[@]}"; do
         if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "$PROG_NAME: \"$target\" does not start with a letter/number" 1>&2
+            printf '%s\n' "error: \"$target\" does not start with a letter/number" 1>&2
             exit 1
         elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "$PROG_NAME: targets may only contain letters, numbers, \"_\", or \"-\"" 1>&2
+            printf '%s\n' "error: targets may only contain letters, numbers, \"_\", or \"-\"" 1>&2
             exit 1
-        elif grep -m 1 -q ^"$target"$ <<< "$templates"; then
-            printf '%s\n' "$PROG_NAME: \"${target}\" is a template name" 1>&2
+        elif grep -m 1 -q ^"$target"$ <<< "$TEMPLATES"; then
+            printf '%s\n' "error: \"${target}\" is a template name" 1>&2
             exit 1
-        elif [[ -d "${CONFIG_DIR}/${target}" ]]; then
-            printf '%s\n' "$PROG_NAME: skipping \"$target\"" 1>&2
-            continue
         fi
 
         mkdir -p "${CONFIG_DIR}/${target}"
     done
+
+    (cd "$CONFIG_DIR" && exa -T -L 1 -D -- * 2>/dev/null | GREP_COLORS='cx=1;34' grep --color -E "^$(tr ' ' '|' <<< $*)$" -A100 -B100)
 }
 
 list_templates() {
     if (( "$#" == 0 )); then
-        cd "$CONFIG_DIR" && exa -T -L 1 -D -- *; cd - > /dev/null
+        (cd "$CONFIG_DIR" && exa -T -L 1 -D -- * 2>/dev/null)
     else
         for target in "$@"; do
             [[ ! "$(exa -L 1 -D "$CONFIG_DIR")" =~ $target ]] && {
-                printf '%s\n' "$PROG_NAME: unknown target \"$target\"" 1>&2
+                printf '%s\n' "error: unknown target \"$target\"" 1>&2
                 exit 1
             }
         done
