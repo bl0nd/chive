@@ -16,8 +16,19 @@ LANG=C
 
 usage() {
     printf "%s\n" "\
-usage: ch [--version] [--help] [--add|-a TARGET ...]
-          [--template|-t TARGET|TEMPLATE] [[TARGET ...] TEMPLATE] ...
+usage: ch [--version] [--help] [--edit|-e] [--list|-l ] [--check|-c]
+          [--add|-a TARGET ...] [--template|-t TARGET|TEMPLATE]
+          [[TARGET ...] TEMPLATE] ...
+
+Options:
+
+   --version                     print program version.
+   --help                        print this message and exit.
+   --edit, -e TEMPLATE ...       edit templates.
+   --list, -l TEMPLATE ...       list templates.
+   --check, -c TEMPLATE ...      check template files.
+   --add, -a TARGET ...          add targets.
+   --template, -t TEMPLATE ...   add templates.
 "
     exit 1
 }
