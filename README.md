@@ -23,8 +23,8 @@ file.
 
 #### Variants
 In order to switch variants without requiring additional information in the
-original target file, Chive needs some help from you. In particular, Chive
-must somehow know where in the target to start deleting and adding content.
+original target file, Chive needs some help. In particular, Chive needs to
+somehow know where in the target to begin deleting and adding text/data.
 
 To do this, Chive searches all the variants for a particular target to see if
 any of them has an exact match against the target file. If there is, then Chive
