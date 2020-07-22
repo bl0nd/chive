@@ -274,24 +274,33 @@ v_add() {
 }
 
 v_create() {
-    local ref custom_template path
+    local arr
+    local stdin_data
+    local variant
+    local v_path
 
-    ref=("$@")
+    arr=("$@")
 
+    # Check if STDIN is open. If it is, then the user wants a custom variant
     if ! test -t 0; then
-        custom_template=$(</dev/stdin)
+        stdin_data=$(</dev/stdin)
     fi
 
-    for target in "${ref[@]}"; do
-        for template in "${templates[@]}"; do
-            path="${CONFIG_DIR}/${target}/${template}"
+    for target in "${arr[@]}"; do
+        for variant in "${variants[@]}"; do
+            v_path="$CONFIG_DIR/$target/$variant"
 
-            if test -t 0; then
-                # if nothing is going to our stdin, create empty templates
-                touch "$path"
-            elif [[ ! -f "$path" ]]; then
-                # use stdin as content for templates
-                printf '%s\n' "$custom_template" > "$path"
+            # Create either default or custom variant
+            # TODO (?): Replace the "added" messages with a highlighted tree
+            #           like in t_add().
+            if [[ -z "$stdin_data" ]]; then
+                if [[ ! -f "$v_path" ]]; then
+                    touch "$v_path"
+                    printf '%s\n' "$target: added \"$variant\""
+                fi
+            elif [[ ! -f "$v_path" ]]; then
+                printf '%s\n' "$stdin_data" > "$v_path"
+                printf '%s\n' "$target: added \"$variant\""
             fi
         done
     done
