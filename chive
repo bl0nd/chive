@@ -49,7 +49,7 @@ die() {
 #
 # This is typically used for the `tree` command, but is also used for `ls` to
 # color the filenames.
-color_tree() {
+color_listing() {
     GREP_COLORS='sl=1;30:ms=01;34' grep --color '[^├─│└─]'
 }
 
@@ -59,6 +59,14 @@ pathname() {
     awk -F/ '{print $NF}'
 }
 
+# Does a general check on target and variant names
+check_name() {
+    if [[ ! "$1" =~ ^[[:alnum:]](.*) ]]; then
+        die "targets and variants may only contain letters, numbers, \"_\", or \"-\""
+    elif [[ ! "$1" =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+        die "targets and variants must start with a letter or number"
+    fi
+}
 
 # Outputs the "content" section of variants. To get the content, we:
 #
@@ -72,7 +80,7 @@ v_content() {
 # Add target files
 t_add() {
     local targets=()
-    local t
+    local name
     local pattern
     local new_targets=()
 
@@ -83,28 +91,25 @@ t_add() {
     IFS=' ' read -r -a targets <<< "$@"
 
     # Add targets
-    for t in "${targets[@]}"; do
+    for name in "${targets[@]}"; do
         # Check names to see if they're valid target names
-        if [[ ! $t =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            die "targets may only contain letters, numbers, \"_\", or \"-\""
-        elif [[ ! $t =~ ^[[:alnum:]](.*) ]]; then
-            die "targets must start with a letter or number"
-        elif grep -m 1 -q ^"$t"$ <<< "$ALL_VARIANTS"; then
-            die "\"$t\" is a template name"
+        check_name "$name"
+        if grep -m 1 -q ^"$name"$ <<< "$ALL_VARIANTS"; then
+            die "\"$name\" is an existing variant"
         fi
 
         # Create target directory if it doesn't exist and add the target to the
         # list of new targets
-        [[ ! -d "$CONFIG_DIR/$t" ]] && {
-            mkdir -p "$CONFIG_DIR/$t"
-            new_targets+=("$t")
+        [[ ! -d "$CONFIG_DIR/$name" ]] && {
+            mkdir -p "$CONFIG_DIR/$name"
+            new_targets+=("$name")
         }
     done
 
     # Show all targets
     if (( "${#new_targets}" == 0 )); then
         # no new targets were added, so just list all targets in the same color
-        (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_tree)
+        (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_listing)
     else
         # new targets were found, so highlight the new targets
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
@@ -112,7 +117,8 @@ t_add() {
     fi
 }
 
-t_setsome() {
+# Set variants for specific targets
+v_setsome() {
     for template in "${templates[@]}"; do
         for target in "${targets[@]}"; do
             path="${CONFIG_DIR}/${target}/${template}"
@@ -125,7 +131,8 @@ t_setsome() {
     done
 }
 
-t_setall() {
+# Set a variant for all targets
+v_setall() {
     local config_og content_og config content match linenr offset endnr
 
     if (( "$#" != 1 )); then
@@ -208,9 +215,9 @@ v_set() {
     done
 
     if (( "${#targets}" == 0 )); then
-        t_setall "$@"
+        v_setall "$@"
     else
-        t_setsome
+        v_setsome
     fi
 }
 
@@ -292,36 +299,32 @@ v_create() {
 #  * If existing templates and targets are specified, assume the user wants to
 #    set some templates for some targets, and other templates for other targets.
 v_start() {
-    local target failed_targets failed_templates error
+    local name
+    local t_failed
+    local v_failed
+    local error
 
     if (( "$#" == 0 )); then
         # nothing was given, so print all the things
-        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_tree)
+        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
     else
-        # check the arguments passed
-        for target in "${@}"; do
-            if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-                printf '%s\n' "error: target \"$target\" does not start with a letter/number" 1>&2
-                exit 1
-            elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-                printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"" 1>&2
-                exit 1
-            fi
+        for name in "${@}"; do
+            check_name "$name"
         done
 
         # see if any of the names are not targets
-        failed_targets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
+        t_failed="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
 
-        if [[ -z "$failed_targets" ]]; then
+        if [[ -z "$t_failed" ]]; then
             # only targets were specified, so list their templates
-            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
+            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_listing)
         else
             # some names aren't targets, so check and see if they're templates.
             # if they are, set the templates
-            read -a failed_targets <<< "$(tr '\n' ' ' <<< "$failed_targets" | sed 's/[ ]*$//')"
-            failed_templates=()
+            read -a t_failed <<< "$(tr '\n' ' ' <<< "$t_failed" | sed 's/[ ]*$//')"
+            v_failed=()
 
-            for target in "${failed_targets[@]}"; do
+            for target in "${t_failed[@]}"; do
                 if [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]]; then
                     printf 'error: unknown target %s\n' "$target" 1>&2
                     exit 1
