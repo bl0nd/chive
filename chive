@@ -17,19 +17,19 @@ LANG=C
 usage() {
     printf '%s\n' "\
 usage: chive [--version] [--help] [-e | --edit] [-l | --list] [-c | --check]
-             [-a | --add <target> ...] [-t | --template <target> | <template>]
-             [[<target> ...] <template>] ...
+             [-a | --add <target> ...] [-v | --variant <target> | <variant>]
+             [[<target> ...] <variant>] ...
 
 Options:
 
-   -a, -add TARGET ...          add targets
-   -t, --template TEMPLATE ...  add templates
-   -e, --edit TEMPLATE ...      edit templates
-   -l, --list TEMPLATE ...      list templates
-   -c, --check TEMPLATE ...     check templates
+   -a, -add TARGET ...        add targets
+   -v, --variant VARIANT ...  add variants
+   -e, --edit VARIANT ...     edit variants
+   -l, --list VARIANT ...     list variants
+   -c, --check VARIANT ...    check variants
 
-   --help                       show version information of $PROG_NAME
-   --version                    show this help and exit
+   --help                     show version information of $PROG_NAME
+   --version                  show this help and exit
 "
     exit 1
 }
@@ -58,6 +58,7 @@ color_listing() {
 pathname() {
     awk -F/ '{print $NF}'
 }
+
 
 # Does a general check on target and variant names
 check_name() {
