@@ -192,7 +192,6 @@ v_setsome() {
             # skip targets that don't have the template or have empty ones
             [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
 
-            # TODO
         done
     done
 }
@@ -200,9 +199,8 @@ v_setsome() {
 
 # Set a variant for all targets
 v_setall() {
-    local variant v
+    local variant v v_path
     local target
-    local v_path
     local match
     local t_path t_path2
     local body body2
@@ -365,15 +363,15 @@ v_start() {
 
 main() {
     if [[ ! -d "$CONFIG_DIR" ]]; then
-        # create configuration directory if it doesn't exist
+        # Create configuration directory, if needed
         mkdir -p "$CONFIG_DIR"
     else
-        # get all variant and target names if configuration directory exists
+        # Get all variant and target names if configuration directory exists
         ALL_VARIANTS="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
         ALL_TARGETS="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
     fi
 
-    # process command-line options/arguments
+    # Process command-line options/arguments
     while [[ "$1" ]]; do
         case $1 in
             "--version")
