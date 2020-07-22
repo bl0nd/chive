@@ -119,6 +119,68 @@ t_add() {
     fi
 }
 
+
+# Create variants
+v_create() {
+    local arr=("$@")
+    local stdin_data
+    local variant
+    local v_path
+
+    # Check if STDIN is open. If it is, then the user wants a custom variant
+    if ! test -t 0; then
+        stdin_data=$(</dev/stdin)
+    fi
+
+    for target in "${arr[@]}"; do
+        for variant in "${variants[@]}"; do
+            v_path="$CONFIG_DIR/$target/$variant"
+
+            # Create either default or custom variant
+            # TODO (?): Replace the "added" messages with a highlighted tree
+            #           like in t_add().
+            if [[ -z "$stdin_data" ]]; then
+                if [[ ! -f "$v_path" ]]; then
+                    touch "$v_path"
+                    printf '%s\n' "$target: added \"$variant\""
+                fi
+            elif [[ ! -f "$v_path" ]]; then
+                printf '%s\n' "$stdin_data" > "$v_path"
+                printf '%s\n' "$target: added \"$variant\""
+            fi
+        done
+    done
+}
+
+
+v_add() {
+    local targets=()
+    local variants=()
+    local args
+
+    (( "$#" == 0 )) && die "no templates specified"
+
+    IFS=' ' read -r -a args <<< "$*"
+
+    for arg in "${args[@]}"; do
+        check_name "$arg"
+
+        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
+            targets+=("$arg")
+        else
+            variants+=("$arg")
+        fi
+    done
+
+    # If no targets are specified, create templates for all targets
+    if [[ "${#targets}" -eq 0 ]]; then
+        v_create ${ALL_TARGETS[*]}
+    else
+        v_create "${targets[@]}"
+    fi
+}
+
+
 # Set variants for specific targets
 v_setsome() {
     local v_path
@@ -134,6 +196,7 @@ v_setsome() {
         done
     done
 }
+
 
 # Set a variant for all targets
 v_setall() {
@@ -218,6 +281,7 @@ v_setall() {
     done
 }
 
+
 v_set() {
     local targets=()
     local variants=()
@@ -242,64 +306,6 @@ v_set() {
     fi
 }
 
-v_add() {
-    local targets=()
-    local variants=()
-    local args
-
-    (( "$#" == 0 )) && die "no templates specified"
-
-    IFS=' ' read -r -a args <<< "$*"
-
-    for arg in "${args[@]}"; do
-        check_name "$arg"
-
-        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
-            targets+=("$arg")
-        else
-            variants+=("$arg")
-        fi
-    done
-
-    # If no targets are specified, create templates for all targets
-    if [[ "${#targets}" -eq 0 ]]; then
-        v_add ${ALL_TARGETS[*]}
-    else
-        v_add "${targets[@]}"
-    fi
-}
-
-# Add variants to all/some templates
-v_add() {
-    local arr=("$@")
-    local stdin_data
-    local variant
-    local v_path
-
-    # Check if STDIN is open. If it is, then the user wants a custom variant
-    if ! test -t 0; then
-        stdin_data=$(</dev/stdin)
-    fi
-
-    for target in "${arr[@]}"; do
-        for variant in "${variants[@]}"; do
-            v_path="$CONFIG_DIR/$target/$variant"
-
-            # Create either default or custom variant
-            # TODO (?): Replace the "added" messages with a highlighted tree
-            #           like in t_add().
-            if [[ -z "$stdin_data" ]]; then
-                if [[ ! -f "$v_path" ]]; then
-                    touch "$v_path"
-                    printf '%s\n' "$target: added \"$variant\""
-                fi
-            elif [[ ! -f "$v_path" ]]; then
-                printf '%s\n' "$stdin_data" > "$v_path"
-                printf '%s\n' "$target: added \"$variant\""
-            fi
-        done
-    done
-}
 
 # Zero or more arguments were given but no options were specified, so either:
 #
