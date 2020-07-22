@@ -140,6 +140,13 @@ set_templates() {
     local templates=()
     local template
     local config
+    local path
+    local header
+    local content
+    local o_content
+    local linenr
+    local offset
+    local endnr
 
     for arg in "${@}"; do
         if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
@@ -149,7 +156,25 @@ set_templates() {
         fi
     done
 
-    if (( "${#targets}" == 0 )); then
+    if (( "${#targets}" > 0 )); then
+        for template in "${templates[@]}"; do
+            for target in "${targets[@]}"; do
+                path="${CONFIG_DIR}/${target}/${template}"
+
+                if [[ -s "$path" ]]; then
+                    # Since the first line is skipped during updates, it doesn't really
+                    # matter if it's commented or not.
+                    #
+                    # Note that the path will be taken as is, without tilde expansion.
+                    header="$(head -n 1 "$path")"
+                    #echo "$header"
+                else
+                    # Skip empty template
+                    continue
+                fi
+            done
+        done
+    else
         # apply for all possible targets
         for template in "${templates[@]}"; do
             for target in ${ALL_TARGETS[*]}; do
@@ -210,25 +235,6 @@ set_templates() {
                     fi
                 else
                     # skip empty template
-                    continue
-                fi
-            done
-        done
-
-    else
-        for template in "${templates[@]}"; do
-            for target in "${targets[@]}"; do
-                path="${CONFIG_DIR}/${target}/${template}"
-
-                if [[ -s "$path" ]]; then
-                    # Since the first line is skipped during updates, it doesn't really
-                    # matter if it's commented or not.
-                    #
-                    # Note that the path will be taken as is, without tilde expansion.
-                    header="$(head -n 1 "$path")"
-                    #echo "$header"
-                else
-                    # Skip empty template
                     continue
                 fi
             done
