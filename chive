@@ -43,10 +43,13 @@ nltospace() {
     tr '\n' ' ' <<< "$1"
 }
 
+get_content() {
+    # skip header    delete blank line content     delete leading/trailing blank lines
+    tail -n +2 "$1" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba'
+}
+
 add_targets() {
-    local targets
-    local new_targets
-    local pattern
+    local targets new_targets pattern
 
     (( "$#" == 1 )) && {
         printf '%s\n' "error: no targets specified" 1>&2
@@ -95,13 +98,13 @@ add_targets() {
 #
 #  * If there is nothing, show all templates.
 go() {
-    local failed_targets
-    local failed_templates
-    local error
+    local target failed_targets failed_templates error
 
     if (( "$#" == 0 )); then
+        # nothing was given, so print all the things
         (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_tree)
     else
+        # check the arguments passed
         for target in "${@}"; do
             if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
                 printf '%s\n' "error: target \"$target\" does not start with a letter/number." 1>&2
@@ -112,141 +115,138 @@ go() {
             fi
         done
 
+        # see if any of the names are not targets
         failed_targets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
 
         if [[ -z "$failed_targets" ]]; then
             # only targets were specified, so list their templates
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
         else
-            # some names failed, so check and see if they're template names
-            failed_targets="$(nltospace "${failed_targets}" | sed 's/[ ]*$//')"
-            failed_templates="$(cd "$CONFIG_DIR" && file -- */${failed_targets[*]} | grep "cannot open" | cut -d: -f1)"
+            # some names aren't targets, so check and see if they're templates.
+            # if they are, set the templates
+            read -a failed_targets <<< "$(nltospace "$failed_targets" | sed 's/[ ]*$//')"
+            failed_templates=()
 
-            if [[ -n "$failed_templates" ]]; then
-                # the names were not targets or templates so abort
-                error="$(nltospace "$failed_templates" | sed 's/[ ]*$//' | xargs printf '"%s", ' | sed 's/\*\///')"
-                printf 'error: unknown targets %s.\n' "${error%, }" 1>&2
-                exit 1
-            fi
+            for target in "${failed_targets[@]}"; do
+                if [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]]; then
+                    printf 'error: unknown target %s.\n' "$target" 1>&2
+                    exit 1
+                fi
+            done
 
-            # there was a template name, so set target templates accordingly
             set_templates "$@"
         fi
     fi
 }
 
+set_n_templates() {
+    for template in "${templates[@]}"; do
+        for target in "${targets[@]}"; do
+            path="${CONFIG_DIR}/${target}/${template}"
+
+            # skip targets that don't have the template or have empty ones
+            [[ ! -f "$path" || ! -s "$path" ]] && continue
+
+            # TODO
+        done
+    done
+}
+
+set_all_templates() {
+    local config_og content_og config content match linenr offset endnr
+
+    if (( "$#" != 1 )); then
+        printf '%s\n' 'error: multiple templates cannot be applied to all targets.' 1>&2
+        exit 1
+    fi
+
+    for template in "${templates[@]}"; do
+        for target in ${ALL_TARGETS[*]}; do
+            path="${CONFIG_DIR}/${target}/${template}"
+
+            # skip targets that don't have the template or have empty ones
+            [[ ! -f "$path" || ! -s "$path" ]] && continue
+
+            # get config path
+            config_og="$(head -n 1 "$path")"
+
+            if [[ ! -f "$config_og" ]]; then
+                printf 'error: file "%s" does not exist\n' "$config_og" >&2
+                exit 1
+            fi
+
+            # get variant content
+            content_og="$(get_content "$path")"
+
+            if pcregrep -M -q "^${content_og}$" "$config_og"; then
+                # the template is already being used
+                continue
+            else
+                # the variant is not currently being used, so check if
+                # another variant is in use. If so, we can replace it.
+                # If not, then we can't switch to this variant.
+                for variant in "${CONFIG_DIR}"/"${target}"/*; do
+                    [[ ! -s "$variant" ]] && continue;
+
+                    # get other variant config
+                    config="$(head -n 1 "$variant")"
+
+                    if [[ -f "$config" ]]; then
+                        # get other variant content
+                        content="$(get_content "$variant")"
+
+                        # check if other variant gets a match
+                        if pcregrep -M -q "^${content}$" "$config"; then
+                            match=1
+                            break
+                        fi
+                    fi
+                done
+
+                if [[ "$match" -eq 1 ]]; then
+                    # another variant matched, which means we can switch
+                    linenr="$(pcregrep -M -n "^${content}$" "$config" | head -n 1 | cut -d: -f1)"
+                    offset="$(wc -l <<< "$content")"
+                    endnr=$((linenr + offset - 1))
+
+                    sed -i "${linenr},${endnr}d" "$config_og"
+                    awk -i inplace -v a="$linenr" -v b="$content_og" "NR==a{print b}1" "$config_og"
+                else
+                    printf '%s\n' "error: invalid variant \"$template\" for target \"$target\"" 1>&2
+                    exit 1
+                fi
+            fi
+        done
+    done
+}
+
 set_templates() {
     local targets=()
     local templates=()
-    local template
-    local config
-    local path
-    local header
-    local content
-    local o_content
-    local linenr
-    local offset
-    local endnr
+    local template path
 
-    for arg in "${@}"; do
-        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
-            targets+=("$arg")
+    # classify names as either targets or templates
+    for name in "${@}"; do
+        if grep -m 1 -q ^"$name"$ <<< "$ALL_TARGETS"; then
+            targets+=("$name")
         else
-            templates+=("$arg")
+            templates+=("$name")
         fi
     done
 
-    if (( "${#targets}" > 0 )); then
-        for template in "${templates[@]}"; do
-            for target in "${targets[@]}"; do
-                path="${CONFIG_DIR}/${target}/${template}"
-
-                if [[ -s "$path" ]]; then
-                    # Since the first line is skipped during updates, it doesn't really
-                    # matter if it's commented or not.
-                    #
-                    # Note that the path will be taken as is, without tilde expansion.
-                    header="$(head -n 1 "$path")"
-                    #echo "$header"
-                else
-                    # Skip empty template
-                    continue
-                fi
-            done
-        done
+    if (( "${#targets}" == 0 )); then
+        set_all_templates "$@"
     else
-        # apply for all possible targets
-        for template in "${templates[@]}"; do
-            for target in ${ALL_TARGETS[*]}; do
-                path="${CONFIG_DIR}/${target}/${template}"
-
-                # skip targets that don't have the template
-                [[ ! -f "$path" ]] && continue
-
-                if [[ -s "$path" ]]; then
-                    # process template
-                    #
-                    # The header should just be the filename.
-                    config="$(head -n 1 "$path")"
-
-                    if [[ -f "$config" ]]; then
-                        # skip header, delete spaces in blank lines, delete leading/trailing blank lines
-                        content="$(tail -n +2 "$path" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba')"
-
-                        # grep contents in config
-                        if pcregrep -M "^${content}$" "$config"; then
-                            # continue as the template is already being used
-                            continue
-                        else
-                            # check if any other templates match the current
-                            # config. if so, use it to update to the new
-                            # template
-                            for t in "${CONFIG_DIR}"/"${target}"/*; do
-                                [[ ! -s "$t" ]] && continue;
-
-                                config="$(head -n 1 "$path")"
-
-                                if [[ -f "$config" ]]; then
-                                    o_content="$(tail -n +2 "$t" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba')"
-                                    if pcregrep -M -q "^${o_content}$" "$config"; then
-                                        match="$t"
-                                        break
-                                    fi
-                                fi
-                            done
-
-                            if [[ -n "$match" ]]; then
-                                # got a match, which means we can replace it
-                                linenr="$(pcregrep -M -n "^${o_content}$" "$config" | head -n 1 | cut -d: -f1)"
-                                offset="$(wc -l <<< "$o_content")"
-                                endnr=$((linenr + offset - 1))  # "- 1" because we sed starts counting from 1
-                                sed -i "${linenr},${endnr}d" "$config"
-                                awk -i inplace -v a="$linenr" -v b="$content" "NR==a{print b}1" "$config"
-                            else
-                                # there was no other match, therefore the template is invalid
-                                printf '%s\n' "error: invalid template \"$template\" for target \"$target\"" 1>&2
-                                exit 1
-                            fi
-
-                        fi
-                    else
-                        printf 'error: file "%s" does not exist\n' "$config" >&2
-                        exit 1
-                    fi
-                else
-                    # skip empty template
-                    continue
-                fi
-            done
-        done
+        set_n_templates
     fi
+
+    #printf '%s\n' "Switched to."
 }
 
 add_templates() {
-    local args
     local targets=()
     local templates=()
-    local arr
+    local args arr
 
     (( "$#" == 1 )) && {
         printf '%s\n' "error: no templates specified" 1>&2
@@ -280,9 +280,7 @@ add_templates() {
 }
 
 create_templates() {
-    local ref
-    local custom_template
-    local path
+    local ref custom_template path
 
     ref=("$@")
 
