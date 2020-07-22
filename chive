@@ -17,8 +17,8 @@ LANG=C
 usage() {
     printf '%s\n' "\
 usage: chive [--version] [--help] [-e | --edit] [-l | --list] [-c | --check]
-             [-a | --add <target> ...] [-v | --variant <target> | <variant>]
-             [[<target> ...] <variant>] ...
+             [-a | --add <target> ...] [-v | --variant <target> | <variant> ...]
+             [-d | --delete <target> | <variant>] [[<target> ...] <variant>] ...
 
 Options:
 
@@ -263,13 +263,14 @@ v_add() {
 
     # If no targets are specified, create templates for all targets
     if [[ "${#targets}" -eq 0 ]]; then
-        v_create ${ALL_TARGETS[*]}
+        v_add ${ALL_TARGETS[*]}
     else
-        v_create "${targets[@]}"
+        v_add "${targets[@]}"
     fi
 }
 
-v_create() {
+# Add variants to all/some templates
+v_add() {
     local arr=("$@")
     local stdin_data
     local variant
