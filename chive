@@ -44,8 +44,8 @@ nltospace() {
 }
 
 get_content() {
-    # skip header    delete blank line content     delete leading/trailing blank lines
-    tail -n +2 "$1" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba'
+    # skip header     delete blank line content     delete leading/trailing blank lines
+    tail -n +2 "$1" | sed 's/^[[:space:]]*$//' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba'
 }
 
 add_targets() {
