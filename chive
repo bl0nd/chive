@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# chive - Simple variant switcher
 
 PROG_NAME="chive"
 VERSION="0.1.0"
@@ -10,16 +12,13 @@ CONFIG_DIR="${XDG_CONFIG_HOME}/${PROG_NAME}"
 LC_ALL=C
 LANG=C
 
-[[ -d "$CONFIG_DIR" ]] && {
-    TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
-    ALL_TARGETS="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
-}
 
+# Print out help message and exit
 usage() {
-    printf "%s\n" "\
-usage: chive [--version] [--help] [--edit|-e] [--list|-l ] [--check|-c]
-             [--add|-a TARGET ...] [--template|-t TARGET|TEMPLATE]
-             [[TARGET ...] TEMPLATE] ...
+    printf '%s\n' "\
+usage: chive [--version] [--help] [-e | --edit] [-l | --list] [-c | --check]
+             [-a | --add <target> ...] [-t | --template <target> | <template>]
+             [[<target> ...] <template>] ...
 
 Options:
 
@@ -35,111 +34,85 @@ Options:
     exit 1
 }
 
+
+# Exit with an error
+die() {
+    printf 'error: %s\n' "$1" 1>&2
+    exit 1
+}
+
+
+# Colors the contents of its STDIN like so:
+#
+#  * Line characters: white
+#  * All other characters: blue
+#
+# This is typically used for the `tree` command, but is also used for `ls` to
+# color the filenames.
 color_tree() {
     GREP_COLORS='sl=1;30:ms=01;34' grep --color '[^├─│└─]'
 }
 
-nltospace() {
-    tr '\n' ' ' <<< "$1"
+
+# Outputs the final component of a file path passed to its STDIN
+pathname() {
+    awk -F/ '{print $NF}'
 }
 
-get_content() {
-    # skip header and delete leading/trailing blank lines
+
+# Outputs the "content" section of variants. To get the content, we:
+#
+#  1. Skip header (i.e., first line).
+#  2. Delete leading and trailing blank lines.
+v_content() {
     tail -n +2 "$1" | tac | sed '/./,$!d' | tac | sed '/./,$!d'
 }
 
-add_targets() {
-    local targets new_targets pattern
 
-    (( "$#" == 1 )) && {
-        printf '%s\n' "error: no targets specified" 1>&2
-        exit 1
-    }
+# Add target files
+t_add() {
+    local targets=()
+    local t
+    local pattern
+    local new_targets=()
 
-    shift
-    IFS=' ' read -r -a targets <<< $*
-    new_targets=()
+    # Exit if no targets are specified
+    (( "$#" == 0 )) && die "no targets specified"
 
-    for target in "${targets[@]}"; do
-        if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: target \"$target\" does not start with a letter/number." 1>&2
-            exit 1
-        elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
-            exit 1
-        elif grep -m 1 -q ^"$target"$ <<< "$TEMPLATES"; then
-            printf '%s\n' "error: \"${target}\" is a template name." 1>&2
-            exit 1
+    # Read arguments into array
+    IFS=' ' read -r -a targets <<< "$@"
+
+    # Add targets
+    for t in "${targets[@]}"; do
+        # Check names to see if they're valid target names
+        if [[ ! $t =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+            die "targets may only contain letters, numbers, \"_\", or \"-\""
+        elif [[ ! $t =~ ^[[:alnum:]](.*) ]]; then
+            die "targets must start with a letter or number"
+        elif grep -m 1 -q ^"$t"$ <<< "$ALL_VARIANTS"; then
+            die "\"$t\" is a template name"
         fi
 
-        [[ ! -d "${CONFIG_DIR}"/"${target}" ]] && {
-            mkdir -p "${CONFIG_DIR}/${target}"
-            new_targets+=("$target")
+        # Create target directory if it doesn't exist and add the target to the
+        # list of new targets
+        [[ ! -d "$CONFIG_DIR/$t" ]] && {
+            mkdir -p "$CONFIG_DIR/$t"
+            new_targets+=("$t")
         }
     done
 
+    # Show all targets
     if (( "${#new_targets}" == 0 )); then
+        # no new targets were added, so just list all targets in the same color
         (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_tree)
     else
+        # new targets were found, so highlight the new targets
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
-        (cd "$CONFIG_DIR" && ls -1 | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
+        (cd "$CONFIG_DIR" && ls -1 -d | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
     fi
 }
 
-# This is the start of the main program:
-#
-#  * If there is an existing template specified, then we assume we want to set
-#    templates.
-#
-#  * If there is an non-existing template specified, then we error out assuming
-#    the user wanted to see templates of a particular target.
-#
-#  * If there is only targets, show templates for them.
-#
-#  * If there is nothing, show all templates.
-go() {
-    local target failed_targets failed_templates error
-
-    if (( "$#" == 0 )); then
-        # nothing was given, so print all the things
-        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_tree)
-    else
-        # check the arguments passed
-        for target in "${@}"; do
-            if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
-                printf '%s\n' "error: target \"$target\" does not start with a letter/number." 1>&2
-                exit 1
-            elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-                printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
-                exit 1
-            fi
-        done
-
-        # see if any of the names are not targets
-        failed_targets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
-
-        if [[ -z "$failed_targets" ]]; then
-            # only targets were specified, so list their templates
-            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
-        else
-            # some names aren't targets, so check and see if they're templates.
-            # if they are, set the templates
-            read -a failed_targets <<< "$(nltospace "$failed_targets" | sed 's/[ ]*$//')"
-            failed_templates=()
-
-            for target in "${failed_targets[@]}"; do
-                if [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]]; then
-                    printf 'error: unknown target %s.\n' "$target" 1>&2
-                    exit 1
-                fi
-            done
-
-            set_templates "$@"
-        fi
-    fi
-}
-
-set_n_templates() {
+t_setsome() {
     for template in "${templates[@]}"; do
         for target in "${targets[@]}"; do
             path="${CONFIG_DIR}/${target}/${template}"
@@ -152,11 +125,11 @@ set_n_templates() {
     done
 }
 
-set_all_templates() {
+t_setall() {
     local config_og content_og config content match linenr offset endnr
 
     if (( "$#" != 1 )); then
-        printf '%s\n' 'error: multiple templates cannot be applied to all targets.' 1>&2
+        printf '%s\n' 'error: multiple templates cannot be applied to all targets' 1>&2
         exit 1
     fi
 
@@ -177,7 +150,7 @@ set_all_templates() {
             fi
 
             # get variant content
-            content_og="$(get_content "$path")"
+            content_og="$(v_content "$path")"
 
             if pcregrep -M -q "^${content_og}$" "$config_og"; then
                 # the template is already being used
@@ -194,7 +167,7 @@ set_all_templates() {
 
                     if [[ -f "$config" ]]; then
                         # get other variant content
-                        content="$(get_content "$variant")"
+                        content="$(v_content "$variant")"
 
                         # check if other variant gets a match
                         if pcregrep -M -q "^${content}$" "$config"; then
@@ -220,7 +193,7 @@ set_all_templates() {
     done
 }
 
-set_templates() {
+v_set() {
     local targets=()
     local templates=()
     local template path
@@ -235,15 +208,13 @@ set_templates() {
     done
 
     if (( "${#targets}" == 0 )); then
-        set_all_templates "$@"
+        t_setall "$@"
     else
-        set_n_templates
+        t_setsome
     fi
-
-    #printf '%s\n' "Switched to."
 }
 
-add_templates() {
+v_add() {
     local targets=()
     local templates=()
     local args arr
@@ -253,15 +224,14 @@ add_templates() {
         exit 1
     }
 
-    shift
     IFS=' ' read -r -a args <<< "$*"
 
     for arg in "${args[@]}"; do
         if [[ ! $arg =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: template \"$arg\" does not start with a letter/number." 1>&2
+            printf '%s\n' "error: template \"$arg\" does not start with a letter/number" 1>&2
             exit 1
         elif [[ ! $arg =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: template \"$arg\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
+            printf '%s\n' "error: template \"$arg\" does not contain only letters, numbers, \"_\", or \"-\"" 1>&2
             exit 1
         elif grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
             targets+=("$arg")
@@ -273,13 +243,13 @@ add_templates() {
     # if no targets are specified, create templates for all targets
     if [[ "${#targets}" -eq 0 ]]; then
         arr=($ALL_TARGETS)
-        create_templates "${arr[@]}"
+        v_create "${arr[@]}"
     else
-        create_templates "${targets[@]}"
+        v_create "${targets[@]}"
     fi
 }
 
-create_templates() {
+v_create() {
     local ref custom_template path
 
     ref=("$@")
@@ -303,43 +273,107 @@ create_templates() {
     done
 }
 
-main() {
-    [[ ! -d "$CONFIG_DIR" ]] && {
-        mkdir -p "${XDG_CONFIG_HOME}/${PROG_NAME}"
-    }
+# Zero or more arguments were given but no options were specified, so either:
+#
+#  1. List templates of all/some targets.
+#  2. Set templates for all/some targets.
+#
+# The decision process is like so:
+#
+#  * If no arguments are given, assume the user wants to see the templates for
+#    all targets.
+#
+#  * If existing targets are specified, assume the user wants to see the
+#    templates for those targets.
+#
+#  * If an existing template is specified, assume the user wants to set that
+#    template for all targets.
+#
+#  * If existing templates and targets are specified, assume the user wants to
+#    set some templates for some targets, and other templates for other targets.
+v_start() {
+    local target failed_targets failed_templates error
 
+    if (( "$#" == 0 )); then
+        # nothing was given, so print all the things
+        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_tree)
+    else
+        # check the arguments passed
+        for target in "${@}"; do
+            if [[ ! $target =~ ^[[:alnum:]](.*) ]]; then
+                printf '%s\n' "error: target \"$target\" does not start with a letter/number" 1>&2
+                exit 1
+            elif [[ ! $target =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+                printf '%s\n' "error: target \"$target\" does not contain only letters, numbers, \"_\", or \"-\"" 1>&2
+                exit 1
+            fi
+        done
+
+        # see if any of the names are not targets
+        failed_targets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
+
+        if [[ -z "$failed_targets" ]]; then
+            # only targets were specified, so list their templates
+            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_tree)
+        else
+            # some names aren't targets, so check and see if they're templates.
+            # if they are, set the templates
+            read -a failed_targets <<< "$(tr '\n' ' ' <<< "$failed_targets" | sed 's/[ ]*$//')"
+            failed_templates=()
+
+            for target in "${failed_targets[@]}"; do
+                if [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]]; then
+                    printf 'error: unknown target %s\n' "$target" 1>&2
+                    exit 1
+                fi
+            done
+
+            v_set "$@"
+        fi
+    fi
+}
+
+main() {
+    if [[ ! -d "$CONFIG_DIR" ]]; then
+        # create configuration directory if it doesn't exist
+        mkdir -p "$CONFIG_DIR"
+    else
+        # get all variant and target names if configuration directory exists
+        ALL_VARIANTS="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
+        ALL_TARGETS="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
+    fi
+
+    # process command-line options/arguments
     while [[ "$1" ]]; do
         case $1 in
             "--version")
                 printf '%s\n' "$PROG_NAME $VERSION"
-                exit 1
+                exit
             ;;
             "--help") usage ;;
-
             "--add" | "-a")
-                add_targets "$@"
+                shift
+                t_add "$@"
                 exit
             ;;
-
             "--template" | "-t")
-                add_templates "$@"
+                shift
+                v_add "$@"
                 exit
             ;;
-
             "--edit" | "-e")
                 EDIT=1
             ;;
-
             "--check" | "-c")
-                check_templates "$@"
+                shift
+                v_check "$@"
                 exit
             ;;
-
             "--list" | "-l")
-                list_templates "$@"
+                shift
+                v_list "$@"
                 exit
             ;;
-
             *)
                 break
             ;;
@@ -348,7 +382,7 @@ main() {
         shift
     done
 
-    go "$@"
+    v_start "$@"
 }
 
 main "$@"
