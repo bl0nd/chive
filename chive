@@ -12,6 +12,7 @@ LANG=C
 
 [[ -d "$CONFIG_DIR" ]] && {
     TEMPLATES="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
+    ALL_TARGETS="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
 }
 
 usage() {
@@ -129,15 +130,116 @@ go() {
             fi
 
             # there was a template name, so set target templates accordingly
+            set_templates "$@"
         fi
     fi
 }
 
+set_templates() {
+    local targets=()
+    local templates=()
+    local template
+    local config
+
+    for arg in "${@}"; do
+        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
+            targets+=("$arg")
+        else
+            templates+=("$arg")
+        fi
+    done
+
+    if (( "${#targets}" == 0 )); then
+        # apply for all possible targets
+        for template in "${templates[@]}"; do
+            for target in ${ALL_TARGETS[*]}; do
+                path="${CONFIG_DIR}/${target}/${template}"
+
+                # skip targets that don't have the template
+                [[ ! -f "$path" ]] && continue
+
+                if [[ -s "$path" ]]; then
+                    # process template
+                    #
+                    # The header should just be the filename.
+                    config="$(head -n 1 "$path")"
+
+                    if [[ -f "$config" ]]; then
+                        # skip header, delete spaces in blank lines, delete leading/trailing blank lines
+                        content="$(tail -n +2 "$path" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba')"
+
+                        # grep contents in config
+                        if pcregrep -M "^${content}$" "$config"; then
+                            # continue as the template is already being used
+                            continue
+                        else
+                            # check if any other templates match the current
+                            # config. if so, use it to update to the new
+                            # template
+                            for t in "${CONFIG_DIR}"/"${target}"/*; do
+                                [[ ! -s "$t" ]] && continue;
+
+                                config="$(head -n 1 "$path")"
+
+                                if [[ -f "$config" ]]; then
+                                    o_content="$(tail -n +2 "$t" | sed '/^[[:space:]]*$/d' | sed -e :a -e '/./,$!d;/^\n*$/{$d;N;};/\n$/ba')"
+                                    if pcregrep -M -q "^${o_content}$" "$config"; then
+                                        match="$t"
+                                        break
+                                    fi
+                                fi
+                            done
+
+                            if [[ -n "$match" ]]; then
+                                # got a match, which means we can replace it
+                                linenr="$(pcregrep -M -n "^${o_content}$" "$config" | head -n 1 | cut -d: -f1)"
+                                offset="$(wc -l <<< "$o_content")"
+                                endnr=$((linenr + offset - 1))  # "- 1" because we sed starts counting from 1
+                                sed -i "${linenr},${endnr}d" "$config"
+                                awk -i inplace -v a="$linenr" -v b="$content" "NR==a{print b}1" "$config"
+                            else
+                                # there was no other match, therefore the template is invalid
+                                printf '%s\n' "error: invalid template \"$template\" for target \"$target\"" 1>&2
+                                exit 1
+                            fi
+
+                        fi
+                    else
+                        printf 'error: file "%s" does not exist\n' "$config" >&2
+                        exit 1
+                    fi
+                else
+                    # skip empty template
+                    continue
+                fi
+            done
+        done
+
+    else
+        for template in "${templates[@]}"; do
+            for target in "${targets[@]}"; do
+                path="${CONFIG_DIR}/${target}/${template}"
+
+                if [[ -s "$path" ]]; then
+                    # Since the first line is skipped during updates, it doesn't really
+                    # matter if it's commented or not.
+                    #
+                    # Note that the path will be taken as is, without tilde expansion.
+                    header="$(head -n 1 "$path")"
+                    #echo "$header"
+                else
+                    # Skip empty template
+                    continue
+                fi
+            done
+        done
+    fi
+}
+
 add_templates() {
-    local all_templates
-    local all_targets
-    local targets
-    local templates
+    local args
+    local targets=()
+    local templates=()
     local arr
 
     (( "$#" == 1 )) && {
@@ -146,28 +248,25 @@ add_templates() {
     }
 
     shift
-    IFS=' ' read -r -a all_templates <<< "$*"
+    IFS=' ' read -r -a args <<< "$*"
 
-    all_targets="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | awk -F/ '{print $NF}')"
-    targets=()
-
-    for template in "${all_templates[@]}"; do
-        if [[ ! $template =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: template \"$template\" does not start with a letter/number." 1>&2
+    for arg in "${args[@]}"; do
+        if [[ ! $arg =~ ^[[:alnum:]](.*) ]]; then
+            printf '%s\n' "error: template \"$arg\" does not start with a letter/number." 1>&2
             exit 1
-        elif [[ ! $template =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: template \"$template\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
+        elif [[ ! $arg =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
+            printf '%s\n' "error: template \"$arg\" does not contain only letters, numbers, \"_\", or \"-\"." 1>&2
             exit 1
-        elif grep -m 1 -q ^"$template"$ <<< "$all_targets"; then
-            targets+=("$template")
+        elif grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
+            targets+=("$arg")
         else
-            templates+=("$template")
+            templates+=("$arg")
         fi
     done
 
     # if no targets are specified, create templates for all targets
     if [[ "${#targets}" -eq 0 ]]; then
-        arr=($all_targets)
+        arr=($ALL_TARGETS)
         create_templates "${arr[@]}"
     else
         create_templates "${targets[@]}"
