@@ -73,7 +73,7 @@ check_name() {
 #
 #  1. Skip header (i.e., first line).
 #  2. Delete leading and trailing blank lines.
-v_content() {
+v_body() {
     tail -n +2 "$1" | tac | sed '/./,$!d' | tac | sed '/./,$!d'
 }
 
@@ -121,12 +121,14 @@ t_add() {
 
 # Set variants for specific targets
 v_setsome() {
-    for template in "${templates[@]}"; do
+    local v_path
+
+    for variant in "${variants[@]}"; do
         for target in "${targets[@]}"; do
-            path="${CONFIG_DIR}/${target}/${template}"
+            v_path="$CONFIG_DIR/$target/$variant"
 
             # skip targets that don't have the template or have empty ones
-            [[ ! -f "$path" || ! -s "$path" ]] && continue
+            [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
 
             # TODO
         done
@@ -135,51 +137,66 @@ v_setsome() {
 
 # Set a variant for all targets
 v_setall() {
-    local config_og content_og config content match linenr offset endnr
+    local variant v
+    local target
+    local v_path
+    local match
+    local t_path t_path2
+    local body body2
+    local linenr
+    local offset
+    local endnr
 
-    if (( "$#" != 1 )); then
-        printf '%s\n' 'error: multiple templates cannot be applied to all targets' 1>&2
-        exit 1
-    fi
+    # Prevent multiple variants from being specified for all targets
+    (( "$#" != 1 )) && die "multiple templates cannot be applied to all targets"
 
-    for template in "${templates[@]}"; do
+    for variant in "${variants[@]}"; do
+        # ALL_TARGETS isn't an array, but a space-delimited string, so we use
+        # [*] instead of [@].
         for target in ${ALL_TARGETS[*]}; do
-            path="${CONFIG_DIR}/${target}/${template}"
+            v_path="$CONFIG_DIR/$target/$variant"
             match=0
 
-            # skip targets that don't have the template or have empty ones
-            [[ ! -f "$path" || ! -s "$path" ]] && continue
+            # Skip targets that don't have the current variant or if their
+            # variants are empty
+            [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
 
-            # get config path
-            config_og="$(head -n 1 "$path")"
+            # Get target file name
+            t_path="$(head -n 1 "$v_path")"
 
-            if [[ ! -f "$config_og" ]]; then
-                printf 'error: file "%s" does not exist\n' "$config_og" >&2
-                exit 1
-            fi
+            # If target file doesn't exist, die
+            [[ ! -f "$t_path" ]] && die "file \""$t_path"\" does not exist\n" "$t_path"
 
-            # get variant content
-            content_og="$(v_content "$path")"
+            # Get variant body
+            body="$(v_body "$v_path")"
 
-            if pcregrep -M -q "^${content_og}$" "$config_og"; then
-                # the template is already being used
+            # See if the variant's body is being used
+            if pcregrep -M -q "^${body}$" "$t_path"; then
                 continue
             else
-                # the variant is not currently being used, so check if
-                # another variant is in use. If so, we can replace it.
-                # If not, then we can't switch to this variant.
-                for variant in "${CONFIG_DIR}"/"${target}"/*; do
-                    [[ ! -s "$variant" ]] && continue;
+                # The variant is currently not being used, so check if another
+                # variant is in use. If so, we can replace it. If not, then
+                # there's nothing we can do so we'll consider this variant
+                # invalid.
+                for v in "$CONFIG_DIR"/"$target"/*; do
+                    # Skip empty variants
+                    [[ ! -s "$v" ]] && continue;
 
-                    # get other variant config
-                    config="$(head -n 1 "$variant")"
+                    # Get variant config
+                    t_path2="$(head -n 1 "$v")"
 
-                    if [[ -f "$config" ]]; then
-                        # get other variant content
-                        content="$(v_content "$variant")"
+                    if [[ -f "$t_path2" ]]; then
+                        # Get variant body
+                        body2="$(v_body "$v")"
 
-                        # check if other variant gets a match
-                        if pcregrep -M -q "^${content}$" "$config"; then
+                        # Check if variant has a match
+                        #
+                        # Note that we use t_path instead of t_path2. That's
+                        # because while this variant has a match, its target
+                        # path may be invalid or different (though I don't
+                        # really see that happening). So just to be safe, we
+                        # use t_path.
+                        if pcregrep -M -q "^${body2}$" "$t_path"; then
                             match=1
                             break
                         fi
@@ -187,15 +204,16 @@ v_setall() {
                 done
 
                 if [[ "$match" -eq 1 ]]; then
-                    # another variant matched, which means we can switch
-                    linenr="$(pcregrep -M -n "^${content}$" "$config" | head -n 1 | cut -d: -f1)"
-                    offset="$(wc -l <<< "$content")"
-                    endnr=$((linenr + offset - 1))
+                    # There was another variant that has a match
+                    begin="$(pcregrep -M -n "^${body2}$" "$t_path" | head -n 1 | cut -d: -f1)"
+                    offset="$(wc -l <<< "$body2")"
+                    end=$((begin + offset - 1))
 
-                    sed -i "${linenr},${endnr}d" "$config_og"
-                    awk -i inplace -v a="$linenr" -v b="$content_og" "NR==a{print b}1" "$config_og"
+                    sed -i "${begin},${end}d" "$t_path"
+                    awk -i inplace -v a="$begin" -v b="$body" "NR==a{print b}1" "$t_path"
                 else
-                    printf '%s\n' "error: invalid \"$target\" variant: \"$template\"" 1>&2
+                    # There was no match, so die
+                    die "invalid \"$target\" variant: \"$variant\""
                 fi
             fi
         done
@@ -204,52 +222,49 @@ v_setall() {
 
 v_set() {
     local targets=()
-    local templates=()
-    local template path
+    local variants=()
+    local variant
+    local name
 
-    # classify names as either targets or templates
+    # Classify names as either targets or templates
     for name in "${@}"; do
         if grep -m 1 -q ^"$name"$ <<< "$ALL_TARGETS"; then
             targets+=("$name")
         else
-            templates+=("$name")
+            variants+=("$name")
         fi
     done
 
     if (( "${#targets}" == 0 )); then
+        # No targets were specified, so set the variant for all
         v_setall "$@"
     else
+        # Targets were specified, so set variants appropriately
         v_setsome
     fi
 }
 
 v_add() {
     local targets=()
-    local templates=()
-    local args arr
+    local variants=()
+    local args
+    local arr
 
-    (( "$#" == 1 )) && {
-        printf '%s\n' "error: no templates specified" 1>&2
-        exit 1
-    }
+    (( "$#" == 0 )) && die "no templates specified"
 
     IFS=' ' read -r -a args <<< "$*"
 
     for arg in "${args[@]}"; do
-        if [[ ! $arg =~ ^[[:alnum:]](.*) ]]; then
-            printf '%s\n' "error: template \"$arg\" does not start with a letter/number" 1>&2
-            exit 1
-        elif [[ ! $arg =~ ^([[:alnum:]]+[_-]*)*$ ]]; then
-            printf '%s\n' "error: template \"$arg\" does not contain only letters, numbers, \"_\", or \"-\"" 1>&2
-            exit 1
-        elif grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
+        check_name "$arg"
+
+        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
             targets+=("$arg")
         else
-            templates+=("$arg")
+            variants+=("$arg")
         fi
     done
 
-    # if no targets are specified, create templates for all targets
+    # If no targets are specified, create templates for all targets
     if [[ "${#targets}" -eq 0 ]]; then
         arr=($ALL_TARGETS)
         v_create "${arr[@]}"
@@ -302,37 +317,37 @@ v_create() {
 #    set some templates for some targets, and other templates for other targets.
 v_start() {
     local name
-    local t_failed
-    local v_failed
-    local error
+    local nontargets
 
     if (( "$#" == 0 )); then
-        # nothing was given, so print all the things
+        # Nothing was given, so print all the things
         (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
     else
+        # Arguments were specified, so go through the decision process
+
+        # Run names through some general checks
         for name in "${@}"; do
             check_name "$name"
         done
 
-        # see if any of the names are not targets
-        t_failed="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
+        # See if any of the names aren't target names; if so, collect them
+        nontargets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
 
-        if [[ -z "$t_failed" ]]; then
-            # only targets were specified, so list their templates
+        if [[ -z "$nontargets" ]]; then
+            # Only targets were specified, so list their templates
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_listing)
         else
-            # some names aren't targets, so check and see if they're templates.
-            # if they are, set the templates
-            read -a t_failed <<< "$(tr '\n' ' ' <<< "$t_failed" | sed 's/[ ]*$//')"
-            v_failed=()
+            # Nontargets were found!
 
-            for target in "${t_failed[@]}"; do
-                if [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]]; then
-                    printf 'error: unknown target %s\n' "$target" 1>&2
-                    exit 1
-                fi
+            # Clean up the name of nontargets a bit
+            read -r -a nontargets <<< "$(tr '\n' ' ' <<< "$nontargets" | sed 's/[ ]*$//')"
+
+            # Check if nontargets are variants
+            for target in "${nontargets[@]}"; do
+                [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]] && die "unknown target or variant \"$target\""
             done
 
+            # All nontargets are existing variants, so set them
             v_set "$@"
         fi
     fi
@@ -361,7 +376,7 @@ main() {
                 t_add "$@"
                 exit
             ;;
-            "--template" | "-t")
+            "--variant" | "-v")
                 shift
                 v_add "$@"
                 exit
