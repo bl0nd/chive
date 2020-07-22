@@ -143,9 +143,7 @@ v_setall() {
     local match
     local t_path t_path2
     local body body2
-    local linenr
-    local offset
-    local endnr
+    local begin offset end
 
     # Prevent multiple variants from being specified for all targets
     (( "$#" != 1 )) && die "multiple templates cannot be applied to all targets"
@@ -165,7 +163,7 @@ v_setall() {
             t_path="$(head -n 1 "$v_path")"
 
             # If target file doesn't exist, die
-            [[ ! -f "$t_path" ]] && die "file \""$t_path"\" does not exist\n" "$t_path"
+            [[ ! -f "$t_path" ]] && die "file \"$t_path\" does not exist\n" "$t_path"
 
             # Get variant body
             body="$(v_body "$v_path")"
@@ -248,7 +246,6 @@ v_add() {
     local targets=()
     local variants=()
     local args
-    local arr
 
     (( "$#" == 0 )) && die "no templates specified"
 
@@ -266,20 +263,17 @@ v_add() {
 
     # If no targets are specified, create templates for all targets
     if [[ "${#targets}" -eq 0 ]]; then
-        arr=($ALL_TARGETS)
-        v_create "${arr[@]}"
+        v_create ${ALL_TARGETS[*]}
     else
         v_create "${targets[@]}"
     fi
 }
 
 v_create() {
-    local arr
+    local arr=("$@")
     local stdin_data
     local variant
     local v_path
-
-    arr=("$@")
 
     # Check if STDIN is open. If it is, then the user wants a custom variant
     if ! test -t 0; then
