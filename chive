@@ -163,6 +163,7 @@ set_all_templates() {
     for template in "${templates[@]}"; do
         for target in ${ALL_TARGETS[*]}; do
             path="${CONFIG_DIR}/${target}/${template}"
+            match=0
 
             # skip targets that don't have the template or have empty ones
             [[ ! -f "$path" || ! -s "$path" ]] && continue
@@ -212,8 +213,7 @@ set_all_templates() {
                     sed -i "${linenr},${endnr}d" "$config_og"
                     awk -i inplace -v a="$linenr" -v b="$content_og" "NR==a{print b}1" "$config_og"
                 else
-                    printf '%s\n' "error: invalid variant \"$template\" for target \"$target\"" 1>&2
-                    exit 1
+                    printf '%s\n' "error: invalid \"$target\" variant: \"$template\"" 1>&2
                 fi
             fi
         done
