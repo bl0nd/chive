@@ -109,11 +109,12 @@ t_add() {
     # Show all targets
     if (( "${#new_targets}" == 0 )); then
         # no new targets were added, so just list all targets in the same color
+        # TODO: List specified targets in yellow or something
         (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_listing)
     else
         # new targets were found, so highlight the new targets
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
-        (cd "$CONFIG_DIR" && ls -1 -d | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
+        (cd "$CONFIG_DIR" && ls -1 | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
     fi
 }
 
