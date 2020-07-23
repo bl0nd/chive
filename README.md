@@ -143,12 +143,11 @@ we do provide targets, the variants will be created only for those targets.
 Also, note that order doesn't matter when listing out targets and variants.
 
 So far, we've only added **empty variants**. But we can use `STDIN` to add more
-useful variants, right? Well, yes and no. In my experience, that approach works
-well for individual variants, but breaks down when multiple variants are
-involved. In particular,
+useful variants, right? Well, yes and no. Unfortunately, when multiple variants
+become involved, things start to break down:
 
-* Variant data is often multi-line, meaning that we can't distinguish between
-  different variant contents as easily as we could target paths.
+* Variant data is often multi-line, meaning we can't distinguish between
+  variant contents as easily as we could target paths.
 
 * Providing a cookie-cutter variant often doesn't make any sense, especially
   when multiple targets are involved.
