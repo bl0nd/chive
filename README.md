@@ -73,8 +73,10 @@ Chive allows you to switch between **variants** of **targets**:
 
 The first thing you'll need to do is create a target:
 
-```sh
+```console
 $ chive -t vim bash
+vim
+bash
 ```
 
 This creates two **empty targets**: `vim` and `bash`. As the name suggests,
@@ -88,9 +90,9 @@ pipes (`|`), [input redirection](https://www.gnu.org/software/bash/manual/html_n
 [here strings](https://tldp.org/LDP/abs/html/x17837.html) (`<<<`) can be used
 configure Chive in an easy and elegant way.
 
-Thus, to create **full targets** or reconfigure empty targets:
+Thus, to create **full targets** or reconfigure empty ones:
 
-```sh
+```console
 $ chive -t vim-colors vim-keybinds <<< ~/.vimrc
 vim-colors
 vim-keybinds
@@ -105,9 +107,8 @@ bash
 sway
 ```
 
-Now Chive knows that both `vim-colors` and `vim-keybinds` manage `~/.vimrc`,
-while `bash` and `sway` manage `~/.bashrc` and `~/.config/sway/config`,
-respectively.
+Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
+`sway` manage `~/.bashrc` and `~/.config/sway/config`, respectively.
 
 <!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
