@@ -2,9 +2,7 @@
 
 Have you ever wanted to easily switch between different versions of `~/.vimrc`
 or `~/.bashrc` (perhaps you often change Vim color schemes and Bash prompts)?
-Well, Chive has you covered!
-
-Chive is a file variant switcher. That is, it can replace sections of a file
+Well, look no further!  Chive allows you to easily replace sections of a file
 with other text or data without requiring modifications to the original file.
 
 <!--## Motivation-->
