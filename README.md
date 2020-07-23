@@ -142,20 +142,16 @@ If don't specify any targets, the variants will be created for all targets. If
 we do provide targets, the variants will be created only for those targets.
 Also, note that order doesn't matter when listing out targets and variants.
 
-So far, we've only added **empty variants**. But we can use `STDIN` to add more
-useful variants, right? Well, yes and no. Unfortunately, when multiple variants
-become involved, things start to break down:
-
-* Variants are often multi-line, so we can't distinguish between them as easily
-  as we could target paths.
-
-* Providing a cookie-cutter variant often doesn't make any sense, especially
-  when multiple targets are involved.
+So far, we've only added **empty variants**. But we can use `STDIN` to add
+**full variants**, right? Well, yes and no. Unfortunately, when multiple
+variants become involved, things start to break down because 1) variants are
+often multi-line, so we can't distinguish between them as easily as we could
+target paths; and 2) providing a cookie-cutter variant often doesn't make any
+sense, especially when multiple targets are involved.
 
 Thus, the approach I suggest is as follows:
 
-* If you are adding or configuring an individual variant, use the `STDIN`
-  approach just like before:
+* When possible, create full variants or modify empty ones using `STDIN`:
 
   ```console
   $ chive
@@ -169,8 +165,22 @@ Thus, the approach I suggest is as follows:
   alacritty: added "gruvbox"
   ```
 
-* If you are adding multiple variants for the same target,
+* When adding multiple variants, use the `--edit | -e` flag, which will bring
+  up all relevant variant files in `fzf` so that you may edit each one
+  manually.
 
+  ```console
+  $ chive
+  alacritty
+  vim
+
+  $ chive -e -v solarized zenburn
+    alacritty/solarized
+    alacritty/zenburn
+  > vim/zenburn
+	3/3
+  >
+  ```
 ### Variant Switching
 
 <!--### Rules-->
