@@ -114,19 +114,19 @@ Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
 
 ### Variant Creation
 
-Now that we have full targets, we can create **empty variants** with the
-`--variant | -v` flag.
+The next step is to create variants with the `--variant | -v` flag:
 
-```sh
+```console
+# List targets and variants
+$ chive
+vim
+alacritty
+
 $ chive -v solarized gruvbox
-vim-colors: added "solarized"
-vim-colors: added "gruvbox"
-vim-keybinds: added "solarized"
-vim-keybinds: added "gruvbox"
-bash: added "solarized"
-bash: added "gruvbox"
-sway: added "solarized"
-sway: added "gruvbox"
+vim: added "solarized"
+vim: added "gruvbox"
+alacritty: added "solarized"
+alacritty: added "gruvbox"
 ```
 
 We can see that if we don't specify a target, variants will be created for all
