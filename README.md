@@ -6,37 +6,42 @@ file.
 
 # Motivation
 
-Suppose we would like to easily switch between different versions of `~/.vimrc`
-and `~/.bashrc`. Perhaps you often switch between different Vim color schemes
-and Bash prompts.
+Suppose you would like to easily switch between different versions of
+`~/.vimrc` and `~/.bashrc` (perhaps you often change Vim color schemes and Bash
+prompts).
 
-Traditionally, you'd have to maintain entire copies of both files, switching
-between copies via commands such as `cp` or `mv`. However, the differences
-between copies are typically small compared to the rest of the file, and so
-this method is often incredibly wasteful, not to mention you can only switch
-copies one file at a time (i.e., `cp vim ~/.vimrc && cp bash ~/.bashrc`).
+Traditionally, you'd more or less maintain entire copies of both files and
+switch between the copies manually. However,
 
-Other solutions typically use a version control system such as Git, tracking
-different versions of files as branches or commits. However, there are a few
-problems with this approach:
+* The differences between copies are typically small compared to the rest of
+  the file, making this approach quite wasteful.
 
-* It often requires turning `$HOME` or other directories into a Git repository.
+* You have to switch copies for each file manually. That is, you have to do
+  something like `cp vim-gruvbox ~/.vimrc && cp bash-pure ~/.bashrc`).
 
-* Switching is still limited to one file at a time.
+Most other solutions typically use a version control system such as Git,
+tracking different versions of files as branches or commits. However
+
+* This often requires turning `$HOME` or other directories into a Git repository.
 
 * If you track changes unrelated to color schemes and prompts, maintaining and
-  switching between different versions becomes a lot harder. If you don't track
-  the changes, you'll have to manually exclude them each time you commit a new
-  version.
+  switching between different versions becomes a lot harder. And even if you
+  don't, you'd have to manually exclude the unrelated changes on every
+  staging/commit.
 
 * It's much too complex for what we're trying to do. You shouldn't need to know
-  how commits or branches work to switch color schemes!
+  how commits or branches work just to switch color schemes.
 
-Finally, we have programs such as [mondo]() or [pywal](). These types of
-programs typically require modifications to the targeted file and configuration
-for custom use is often complex.
+Finally, we have programs such as [mondo]() and [pywal](), which more or less
+use special template files to replace sections of a file. I quite like these
+actually, however
 
-So here we are.
+* They typically require modifications to the original file.
+
+* They're quite limited in scope (e.g., `mondo` and `pywal` are geared towards
+  colors).
+
+And so here we are.
 
 # Installation
 
