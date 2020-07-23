@@ -86,29 +86,29 @@ $ chive -t vim bash
 ```
 
 This creates two **empty targets**: `vim` and `bash`. Empty targets contain no
-information on what file is to be managed, and are therefore created but
-ignored by Chive. After all, Chive can't operate on what it doesn't know!
+information on what file each target manages. Consequently, they are ignored
+by Chive. After all, Chive can't operate on what it doesn't know!
 
-This brings us to how Chive accepts data (which is different from options or
-arguments). In short, arbitrary data may be passed to Chive through `STDIN`,
-meaning that Bash facilities such as pipes (`|`), [input redirection]() (`<`),
-[here docs]() (`<<`), and [here strings]() (`<<<`) can be used configure Chive
-in an easy and elegant way.
+This brings us to how Chive accepts data. In short, arbitrary data may be
+passed to Chive through `STDIN`, meaning that Bash facilities such as pipes
+(`|`), [input redirection](https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Redirecting-Input)
+(`<`), [here docs](https://tldp.org/LDP/abs/html/here-docs.html) (`<<`), and
+[here strings](https://tldp.org/LDP/abs/html/x17837.html) (`<<<`) can be used
+configure Chive in an easy and elegant way.
 
 For example, to create **full targets**:
 
 ```sh
 $ chive -t vim-colors vim-keybinds <<< ~/.vimrc
 
-$ chive -t bash alacritty << EOF
+$ chive -t bash sway << EOF
 $HOME/.bashrc
-$HOME/.config/alacritty/alacritty.yml
+$HOME/.config/sway/config
 EOF
 ```
 
 Now Chive knows that `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while
-`bash` and `alacritty` manage `~/.bashrc` and
-`~/.config/alacritty/alacritty.yml`, respectively.
+`bash` and `sway` manage `~/.bashrc` and `~/.config/sway/config`, respectively.
 
 Note that:
 
