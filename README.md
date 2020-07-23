@@ -146,8 +146,8 @@ So far, we've only added **empty variants**. But we can use `STDIN` to add more
 useful variants, right? Well, yes and no. Unfortunately, when multiple variants
 become involved, things start to break down:
 
-* Variants are often multi-line, meaning we can't distinguish between variant
-  data as easily as we could target paths.
+* Variants are often multi-line, so we can't distinguish between them as easily
+  as we could target paths.
 
 * Providing a cookie-cutter variant often doesn't make any sense, especially
   when multiple targets are involved.
