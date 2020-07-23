@@ -85,10 +85,8 @@ After all, Chive can't operate on what it doesn't know!
 
 This brings us to how Chive accepts data. In short, arbitrary data may be
 passed to Chive through `STDIN`, meaning that built-in Bash facilities such as
-pipes (`|`), [input redirection](https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Redirecting-Input)
-(`<`), [here docs](https://tldp.org/LDP/abs/html/here-docs.html) (`<<`), and
-[here strings](https://tldp.org/LDP/abs/html/x17837.html) (`<<<`) can be used
-configure Chive in an easy and elegant way.
+pipes (`|`), input redirection (`<`), here docs (`<<`), and here strings
+(`<<<`) can be used configure Chive in an easy and elegant way.
 
 Thus, to create **full targets** or reconfigure empty ones:
 
