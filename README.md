@@ -20,7 +20,7 @@ switch between the copies manually. However,
   something like `cp vim-gruvbox ~/.vimrc && cp bash-pure ~/.bashrc`).
 
 Most other solutions typically use a version control system such as Git,
-tracking different versions of files as branches or commits. However
+tracking different versions of files as branches or commits. However,
 
 * This often requires turning `$HOME` or other directories into a Git repository.
 
@@ -33,8 +33,7 @@ tracking different versions of files as branches or commits. However
   how commits or branches work just to switch color schemes.
 
 Finally, we have programs such as [mondo]() and [pywal](), which more or less
-use special template files to replace sections of a file. I quite like these
-actually, however
+use special template files to replace sections of a file. However,
 
 * They typically require modifications to the original file.
 
@@ -53,56 +52,51 @@ And so here we are.
 
 Before getting started, let's go over some terminology:
 
-* *Target* - A name for a file you want Chive to manage (e.g., `vim`, `bash`).
+* **Target** - A name for a file you want managed by Chive (e.g., `vim`, `bash`).
 
-* *Variant* - A version of a section of a file (e.g., `colorscheme gruvbox`).
+* **Variant** - A version of a file section (e.g., `colorscheme gruvbox`, `PS1='❯ '`).
 
-With that out of the way, Chive has 3 main operations:
-
-1. Create targets
-2. Create variants
-3. Switch between variants.
+With that out of the way, Chive has 3 main operations: create targets, create
+variants, and switch between variants.
 
 ### Target Creation
 
-Let's start with target creation.
-
-It'd be a real bother to have To start, we create targets for each file we want to manage
-one using the `--template` flag.
+Let's start with target creation:
 
 ```sh
-$ chive -t vim alacritty
+$ chive -t vim bash
 ```
 
-This creates two **default targets**: `vim` and `alacritty`. Now, note that
-default targets have no information on what they're supposed to be managing.
-For example, the target `vim` doesn't know that it's supposed to manage
-`~/.vimrc`. Clearly, Chive can't do anything for `vim` if it doesn't know where
-to do operate.
+This creates two **default targets**: `vim` and `bash`. Recall that targets are
+just names for files. Thus, default targets are targets that contain no
+information on what file is supposed to be managed. Clearly, Chive can't operate
+on something it doesn't know.
 
-This brings us to how Chive accepts data (which is different from arguments or
-options): through STDIN.
+This brings us to how Chive accepts data (which is different from options or
+arguments). In short, arbitrary data may be passed to Chive through `STDIN`,
+meaning that built-in Bash facilities such as pipes (`|`), [input
+redirection]() (`<`), [here docs]() (`<<`), and [here strings]() (`<<<`) can be
+used configure Chive in an easy and elegant manner.
 
-
-Chive's behavior depends STDIN. In particular, a non-empty STDIN allows for the
-creation of custom templates and variants.
-
-Note that heredocs do not expand `~`, so be sure to use `$HOME` instead.
-
-To create targets:
+For example, to create **custom targets** (i.e., targets that contain
+information on what file is to be managed):
 
 ```sh
-# default templates
-$ chive -t vim alacritty
+$ chive -t vim-colors vim-keybinds vim-plugins <<< ~/.vimrc
 
-# custom templates
-$ chive -t vim <<< ~/.vimrc
-
-$ chive -t alacritty sway << EOF
+$ chive -t vim bash alacritty << EOF
+$HOME/.vimrc
+$HOME/.bashrc
 $HOME/.config/alacritty/alacritty.yml
-$HOME/.config/sway/config
 EOF
 ```
+
+Some things to note about the Bash here strings and here docs:
+
+* To have shell expansion and substitution in here strings, don't quote the string.
+
+* Here docs don't expand `~`, so be sure to use `$HOME` instead.
+
 
 ### Rules
 
