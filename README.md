@@ -100,25 +100,62 @@ For example, to create **full targets**:
 
 ```sh
 $ chive -t vim-colors vim-keybinds <<< ~/.vimrc
+vim-colors
+vim-keybinds
 
 $ chive -t bash sway << EOF
-$HOME/.bashrc
-$HOME/.config/sway/config
-EOF
+> $HOME/.bashrc
+> $HOME/.config/sway/config
+> EOF
+vim-colors
+vim-keybinds
+bash
+sway
 ```
 
-Now Chive knows that `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while
-`bash` and `sway` manage `~/.bashrc` and `~/.config/sway/config`, respectively.
+Now Chive knows that both `vim-colors` and `vim-keybinds` manage `~/.vimrc`,
+while `bash` and `sway` manage `~/.bashrc` and `~/.config/sway/config`,
+respectively.
 
-Note that:
-
+#### Gotchas
 * To have shell expansion and substitution in here strings, don't quote the string.
 
 * Here docs don't expand `~`, so be sure to use `$HOME` instead.
 
 ### Variant Creation
 
-Now that we have targets, the next thing to do is create variants.
+Now that we have full targets, we can create **empty variants** with the
+`--variant | -v` flag.
+
+```console
+$ chive -v solarized gruvbox
+vim-colors: added "solarized"
+vim-colors: added "gruvbox"
+vim-keybinds: added "solarized"
+vim-keybinds: added "gruvbox"
+bash: added "solarized"
+bash: added "gruvbox"
+sway: added "solarized"
+sway: added "gruvbox"
+```
+
+We can see that if we don't specify a target, variants will be created for all
+targets.
+
+Let's be a bit more specific:
+
+```console
+$ chive -v bash prompt-1
+bash: added "prompt-1"
+
+$ chive -v var1 sway var2 bash
+sway: added "var1"
+sway: added "var2"
+bash: added "var1"
+bash: added "var2"
+```
+
+You can see that order does not matter, and that we can specify multiple targets.
 
 ### Rules
 
