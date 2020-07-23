@@ -46,13 +46,30 @@ file.
 
 ### Manual
 
+To build and install from source:
+
+```sh
+git clone https://github.com/bl0nd/chive.git && cd chive
+make
+sudo make install
+```
+
 ### Packages
+
+Chive is available on many Linux distributions (as `chive`), including:
+
+* Arch Linux
+* CentOS
+* Debian
+* Fedora
+* RHEL
+* Ubuntu
 
 ## Getting Started
 
 Chive switches between **variants** of **targets**. A variant is a version of a
 file section (e.g., `colorscheme gruvbox`). A target is a name for a file you
-want managed by Chive (e.g., `vim`, `vim-keybinds` `bash`)
+want managed by Chive (e.g., `vim`, `vim-keybinds` `bash`).
 
 Chive has 3 main operations: create targets, create variants, and switch
 between variants.
@@ -86,12 +103,19 @@ $HOME/.config/alacritty/alacritty.yml
 EOF
 ```
 
+Now Chive knows that `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while
+`bash` and `alacritty` manage `~/.bashrc` and
+`~/.config/alacritty/alacritty.yml`, respectively.
+
 Note that:
 
 * To have shell expansion and substitution in here strings, don't quote the string.
 
 * Here docs don't expand `~`, so be sure to use `$HOME` instead.
 
+### Variant Creation
+
+Now that we have targets, the next thing to do is create variants.
 
 ### Rules
 
