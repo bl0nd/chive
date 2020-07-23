@@ -96,9 +96,9 @@ vim-colors
 vim-keybinds
 
 $ chive -t bash sway << EOF
-> $HOME/.bashrc
-> $HOME/.config/sway/config
-> EOF
+$HOME/.bashrc
+$HOME/.config/sway/config
+EOF
 vim-colors
 vim-keybinds
 bash
@@ -117,33 +117,32 @@ Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
 The next step is to create variants with the `--variant | -v` flag:
 
 ```console
-# List targets and variants
 $ chive
-vim
 alacritty
+vim
 
 $ chive -v solarized gruvbox
 vim: added "solarized"
 vim: added "gruvbox"
 alacritty: added "solarized"
 alacritty: added "gruvbox"
+
+$ chive -t sway <<< ~/.config/sway/config
+alacritty
+sway
+vim
+
+$ chive -t zenburn sway vim solarized
+sway: added "zenburn"
+sway: added "solarized"
+vim: added "zenburn"
 ```
 
-We can see that if we don't specify a target, variants will be created for all
-targets. Let's be a bit more specific:
+We can see that if we only specify variants, they'll be created for all
+targets. Also, if we do specify targets, note that we can list several and that
+order does not matter. Pretty nice, right?
 
-```sh
-$ chive -v bash prompt-1
-bash: added "prompt-1"
-
-$ chive -v var1 sway var2 bash
-sway: added "var1"
-sway: added "var2"
-bash: added "var1"
-bash: added "var2"
-```
-
-You can see that order does not matter, and that we can specify multiple targets.
+<!--So far, we've only added **empty variants**.-->
 
 ### Variant Switching
 
