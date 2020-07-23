@@ -1,112 +1,196 @@
 # Chive
 
-Chive is a file variant switcher. In short, Chive can replace sections of a
-file with other text or data without requiring modifications to the original
-file.
+Have you ever wanted to easily switch between different versions of `~/.vimrc`
+or `~/.bashrc` (perhaps you often change Vim color schemes and Bash prompts)?
+Well, look no further!  Chive allows you to easily replace sections of a file
+with other text or data without requiring modifications to the original file.
 
-# Motivation
+<!--## Motivation-->
 
-Suppose we would like to easily switch between different versions of `~/.vimrc`
-and `~/.bashrc`. Perhaps you often switch between different Vim color schemes
-and Bash prompts.
+<!--Traditionally, you'd more or less maintain entire copies of both files and-->
+<!--switch between the copies manually. However,-->
 
-Traditionally, you'd have to maintain entire copies of both files, switching
-between copies via commands such as `cp` or `mv`. However, the differences
-between copies are typically small compared to the rest of the file, and so
-this method is often incredibly wasteful, not to mention you can only switch
-copies one file at a time (i.e., `cp vim ~/.vimrc && cp bash ~/.bashrc`).
+<!--* The differences between copies are typically small compared to the rest of-->
+  <!--the file, making this approach quite wasteful.-->
 
-Other solutions typically use a version control system such as Git, tracking
-different versions of files as branches or commits. However, there are a few
-problems with this approach:
+<!--* You have to switch copies for each file manually. That is, you have to do-->
+  <!--something like `cp vim-gruvbox ~/.vimrc && cp bash-pure ~/.bashrc`).-->
 
-* It often requires turning `$HOME` or other directories into a Git repository.
+<!--Most other solutions typically use a version control system such as Git,-->
+<!--tracking different versions of files as branches or commits. However,-->
 
-* Switching is still limited to one file at a time.
+<!--* This often requires turning `$HOME` or other directories into a Git repository.-->
 
-* If you track changes unrelated to color schemes and prompts, maintaining and
-  switching between different versions becomes a lot harder. If you don't track
-  the changes, you'll have to manually exclude them each time you commit a new
-  version.
+<!--* If you track changes unrelated to color schemes and prompts, maintaining and-->
+  <!--switching between different versions becomes a lot harder. And even if you-->
+  <!--don't, you'd have to manually exclude the unrelated changes on every-->
+  <!--staging/commit.-->
 
-* It's much too complex for what we're trying to do. You shouldn't need to know
-  how commits or branches work to switch color schemes!
+<!--* It's much too complex for what we're trying to do. You shouldn't need to know-->
+  <!--how commits or branches work just to switch color schemes.-->
 
-Finally, we have programs such as [mondo]() or [pywal](). These types of
-programs typically require modifications to the targeted file and configuration
-for custom use is often complex.
+<!--Finally, we have programs such as [mondo]() and [pywal](), which more or less-->
+<!--use special template files to replace sections of a file. However,-->
 
-So here we are.
+<!--* They typically require modifications to the original file.-->
 
-# Installation
+<!--* They're quite limited in scope (e.g., `mondo` and `pywal` are geared towards-->
+  <!--colors).-->
+
+<!--And so here we are.-->
+
+## Installation
 
 ### Manual
 
+To build and install from source:
+
+```
+git clone https://github.com/bl0nd/chive.git && cd chive
+make
+sudo make install
+```
+
 ### Packages
 
-## Usage
+Chive is also available on many Linux distributions (as `chive`), including:
 
-Before getting started, let's go over some terminology:
+* Arch Linux
+* CentOS
+* Debian
+* Fedora
+* RHEL
+* Ubuntu
 
-* *Target* - A name for a file you want Chive to manage (e.g., `vim`, `bash`).
+## Getting Started
 
-* *Variant* - A version of a section of a file (e.g., `colorscheme gruvbox`).
+Chive allows you to switch between **variants** of **targets**:
 
-With that out of the way, Chive has 3 main operations:
-
-1. Create targets
-2. Create variants
-3. Switch between variants.
+* A variant is a version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
+* A target is an alias for a file (e.g., `vim`, `bash`).
 
 ### Target Creation
 
-Let's start with target creation.
+The first thing you'll need to do is create a target:
 
-It'd be a real bother to have To start, we create targets for each file we want to manage
-one using the `--template` flag.
-
-```sh
-$ chive -t vim alacritty
+```console
+$ chive -t vim bash
+vim
+bash
 ```
 
-This creates two **default targets**: `vim` and `alacritty`. Now, note that
-default targets have no information on what they're supposed to be managing.
-For example, the target `vim` doesn't know that it's supposed to manage
-`~/.vimrc`. Clearly, Chive can't do anything for `vim` if it doesn't know where
-to do operate.
+This creates two **empty targets**: `vim` and `bash`. As the name suggests,
+empty targets do not manage any file. Consequently, they are ignored by Chive.
+After all, Chive can't operate on what it doesn't know!
 
-This brings us to how Chive accepts data (which is different from arguments or
-options): through STDIN.
+This brings us to how Chive accepts data. In short, arbitrary data may be
+passed to Chive through `STDIN`, meaning that built-in Bash facilities such as
+pipes (`|`), input redirection (`<`), here docs (`<<`), and here strings
+(`<<<`) can be used configure Chive in an easy and elegant way.
 
+Thus, to create **full targets** or reconfigure empty ones:
 
-Chive's behavior depends STDIN. In particular, a non-empty STDIN allows for the
-creation of custom templates and variants.
+```console
+$ chive -t vim-colors vim-keybinds <<< ~/.vimrc
+vim-colors
+vim-keybinds
 
-Note that heredocs do not expand `~`, so be sure to use `$HOME` instead.
-
-To create targets:
-
-```sh
-# default templates
-$ chive -t vim alacritty
-
-# custom templates
-$ chive -t vim <<< ~/.vimrc
-
-$ chive -t alacritty sway << EOF
-$HOME/.config/alacritty/alacritty.yml
+$ chive -t bash sway << EOF
+$HOME/.bashrc
 $HOME/.config/sway/config
 EOF
+vim-colors
+vim-keybinds
+bash
+sway
 ```
 
-### Rules
+Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
+`sway` manage `~/.bashrc` and `~/.config/sway/config`, respectively.
 
-#### Naming
+<!--* To have shell expansion and substitution in here strings, don't quote the string.-->
+
+<!--* Here docs don't expand `~`, so be sure to use `$HOME` instead.-->
+
+### Variant Creation
+
+The next step is to create variants with the `--variant | -v` flag:
+
+```console
+$ chive
+alacritty
+vim
+
+$ chive -v solarized gruvbox
+vim: added "solarized"
+vim: added "gruvbox"
+alacritty: added "solarized"
+alacritty: added "gruvbox"
+
+$ chive -t sway <<< ~/.config/sway/config
+alacritty
+sway
+vim
+
+$ chive -v zenburn sway vim solarized
+sway: added "zenburn"
+sway: added "solarized"
+vim: added "zenburn"
+```
+
+If don't specify any targets, the variants will be created for all targets. If
+we do provide targets, the variants will be created only for those targets.
+Also, note that order doesn't matter when listing out targets and variants.
+
+So far, we've only added **empty variants**. But we can use `STDIN` to add
+**full variants**, right? Well, yes and no. Unfortunately, when multiple
+variants become involved, things start to break down because 1) variants are
+often multi-line, so we can't distinguish between them as easily as we could
+target paths; and 2) providing a cookie-cutter variant often doesn't make any
+sense, especially when multiple targets are involved.
+
+Thus, the approach I suggest is as follows:
+
+* When possible, create full variants or modify empty ones using `STDIN`:
+
+  ```console
+  $ chive
+  alacritty
+  vim
+
+  $ chive -v vim solarized <<< "colorscheme solarized"
+  vim: added "solarized"
+
+  $ curl ... | chive -v alacritty gruvbox
+  alacritty: added "gruvbox"
+  ```
+
+* When adding multiple variants, use the `--edit | -e` flag, which will bring
+  up all relevant variant files in `fzf` so that you may edit each one
+  manually.
+
+  ```console
+  $ chive
+  alacritty
+  vim
+
+  $ chive -e -v solarized zenburn
+    alacritty/solarized
+    alacritty/zenburn
+  > vim/zenburn
+	3/3
+  >
+  ```
+### Variant Switching
+
+<!--### Rules-->
+
+<!--#### Naming-->
 <!--* Target and template names may consist of letters, numbers, `-`, and `_`.-->
 <!--* Target and template names may start with a letter or number.-->
 <!--* Target and template names must be unique across target and template namespaces-->
 
-#### Variants
+<!--#### Variants-->
 <!--In order to switch variants without requiring additional information in the-->
 <!--original target file, Chive needs some help. In particular, Chive needs to-->
 <!--somehow know where in the target to begin deleting and adding text/data.-->
@@ -121,4 +205,5 @@ EOF
 <!--Chive and that your initial variant matches what you have in the target file-->
 <!--exactly, otherwise Chive won't know where to start!-->
 
-# License
+## License
+This project is released under the [MIT](LICENSE) license.
