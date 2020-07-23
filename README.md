@@ -91,11 +91,11 @@ pipes (`|`), input redirection (`<`), here docs (`<<`), and here strings
 Thus, to create **full targets** or reconfigure empty ones:
 
 ```console
-$ chive --target vim-colors vim-keybinds <<< ~/.vimrc
+$ chive -t vim-colors vim-keybinds <<< ~/.vimrc
 vim-colors
 vim-keybinds
 
-$ chive --target bash sway << EOF
+$ chive -t bash sway << EOF
 $HOME/.bashrc
 $HOME/.config/sway/config
 EOF
@@ -121,18 +121,18 @@ $ chive
 alacritty
 vim
 
-$ chive --varient solarized gruvbox
+$ chive -v solarized gruvbox
 vim: added "solarized"
 vim: added "gruvbox"
 alacritty: added "solarized"
 alacritty: added "gruvbox"
 
-$ chive --target sway <<< ~/.config/sway/config
+$ chive -t sway <<< ~/.config/sway/config
 alacritty
 sway
 vim
 
-$ chive --varient zenburn sway vim solarized
+$ chive -v zenburn sway vim solarized
 sway: added "zenburn"
 sway: added "solarized"
 vim: added "zenburn"
@@ -163,10 +163,10 @@ Thus, the approach I suggest is as follows:
   alacritty
   vim
 
-  $ chive --varient vim solarized <<< "colorscheme solarized"
+  $ chive -v vim solarized <<< "colorscheme solarized"
   vim: added "solarized"
 
-  $ curl https://.../gruvbox.yml | chive --variant alacritty gruvbox
+  $ curl ... | chive -v alacritty gruvbox
   alacritty: added "gruvbox"
   ```
 
