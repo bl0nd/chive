@@ -79,11 +79,11 @@ $ chive -t vim bash
 
 This creates two **empty targets**: `vim` and `bash`. As the name suggests,
 empty targets don't manage anything. Consequently, they are ignored by Chive.
+So how do we tell Chive what each target manages? Through `STDIN`, of course!
 
-So how do we tell Chive what each target manages? Through `STDIN`! This means
-that built-in Bash facilities such as pipes (`|`), input redirection (`<`),
-here docs (`<<`), and here strings (`<<<`) can be used configure Chive in an
-easy and elegant way.
+This means that built-in Bash facilities such as pipes (`|`), input redirection
+(`<`), here docs (`<<`), and here strings (`<<<`) can be used configure Chive
+in an easy and elegant way.
 
 Thus, to create **full targets** (or reconfigure empty ones):
 
