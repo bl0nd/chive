@@ -4,6 +4,7 @@
 
 PROG_NAME="chive"
 VERSION="0.1.0"
+EDITOR="${EDITOR:-vi}"
 
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
 CONFIG_DIR="${XDG_CONFIG_HOME}/${PROG_NAME}"
@@ -214,24 +215,26 @@ v_add() {
         v_create targets[@]
     fi
 
-    for i in "${!new[@]}"; do
-        if [[ "$EDIT" -eq 1 ]]; then
+    if [[ "$EDIT" -eq 1 ]]; then
+        copy=("${new[@]}")
+
+        for i in "${!copy[@]}"; do
             # If --edit was specified, use fzf to show relevant variants
-            rows="$(tr ' ' '\n' <<< "${new[@]}" | awk 'NF')"
+            rows="$(tr ' ' '\n' <<< "${copy[@]}" | awk 'NF')"
             height=$(($(wc -l <<< "$rows") + 2))
             chosen="$(fzf -0 --height="$height" <<< "$rows")"  # TODO (?): preview
 
             (( "${#chosen}" == 0 )) && break
 
-            # Remove already selected entries from listing
-            new=( "${new[@]/"$chosen"}" )
-            completed+=("$chosen")
-        else
-            completed+=("${new[i]}")
-        fi
-    done
+            # Edit variant
+            "$EDITOR" "$CONFIG_DIR/$chosen"
 
-    for tv in "${completed[@]}"; do
+            # Remove already selected entries from listing
+            copy=( "${copy[@]/"$chosen"}" )
+        done
+    fi
+
+    for tv in "${new[@]}"; do
         printf '%s"\n' "$(sed 's/\//: added \"/' <<< "$tv")"
     done
 }
