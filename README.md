@@ -91,11 +91,11 @@ pipes (`|`), input redirection (`<`), here docs (`<<`), and here strings
 Thus, to create **full targets** or reconfigure empty ones:
 
 ```console
-$ chive -t vim-colors vim-keybinds <<< ~/.vimrc
+$ chive --target vim-colors vim-keybinds <<< ~/.vimrc
 vim-colors
 vim-keybinds
 
-$ chive -t bash sway << EOF
+$ chive --target bash sway << EOF
 $HOME/.bashrc
 $HOME/.config/sway/config
 EOF
@@ -121,28 +121,56 @@ $ chive
 alacritty
 vim
 
-$ chive -v solarized gruvbox
+$ chive --varient solarized gruvbox
 vim: added "solarized"
 vim: added "gruvbox"
 alacritty: added "solarized"
 alacritty: added "gruvbox"
 
-$ chive -t sway <<< ~/.config/sway/config
+$ chive --target sway <<< ~/.config/sway/config
 alacritty
 sway
 vim
 
-$ chive -t zenburn sway vim solarized
+$ chive --varient zenburn sway vim solarized
 sway: added "zenburn"
 sway: added "solarized"
 vim: added "zenburn"
 ```
 
-We can see that if we only specify variants, they'll be created for all
-targets. Also, if we do specify targets, note that we can list several and that
-order does not matter. Pretty nice, right?
+If don't specify any targets, the variants will be created for all targets. If
+we do provide targets, the variants will be created only for those targets.
+Also, note that order doesn't matter when listing out targets and variants.
 
-<!--So far, we've only added **empty variants**.-->
+So far, we've only added **empty variants**. But we can use `STDIN` to add more
+useful variants, right? Well, yes and no. In my experience, that approach works
+well for individual variants, but breaks down when multiple variants are
+involved. In particular,
+
+* Variant data is often multi-line, meaning that we can't distinguish between
+  different variant contents as easily as we could target paths.
+
+* Providing a cookie-cutter variant often doesn't make any sense, especially
+  when multiple targets are involved.
+
+Thus, the approach I suggest is as follows:
+
+* If you are adding or configuring an individual variant, use the `STDIN`
+  approach just like before:
+
+  ```console
+  $ chive
+  alacritty
+  vim
+
+  $ chive --varient vim solarized <<< "colorscheme solarized"
+  vim: added "solarized"
+
+  $ curl https://.../gruvbox.yml | chive --variant alacritty gruvbox
+  alacritty: added "gruvbox"
+  ```
+
+* If you are adding multiple variants for the same target,
 
 ### Variant Switching
 
