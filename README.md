@@ -71,24 +71,24 @@ Chive allows you to switch between **variants** of **targets**:
 
 ### Target Creation
 
-The first thing you'll want to do is create a target:
+The first thing you'll need to do is create a target:
 
 ```sh
 $ chive -t vim bash
 ```
 
-This creates two **empty targets**: `vim` and `bash`. Empty targets do not
-manage any file, and so they are ignored by Chive. After all, Chive can't
-operate on what it doesn't know!
+This creates two **empty targets**: `vim` and `bash`. As the name suggests,
+empty targets do not manage any file. Consequently, they are ignored by Chive.
+After all, Chive can't operate on what it doesn't know!
 
 This brings us to how Chive accepts data. In short, arbitrary data may be
-passed to Chive through `STDIN`, meaning that Bash facilities such as pipes
-(`|`), [input redirection](https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Redirecting-Input)
+passed to Chive through `STDIN`, meaning that built-in Bash facilities such as
+pipes (`|`), [input redirection](https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Redirecting-Input)
 (`<`), [here docs](https://tldp.org/LDP/abs/html/here-docs.html) (`<<`), and
 [here strings](https://tldp.org/LDP/abs/html/x17837.html) (`<<<`) can be used
 configure Chive in an easy and elegant way.
 
-For example, to create **full targets**:
+Thus, to create **full targets** or reconfigure empty targets:
 
 ```sh
 $ chive -t vim-colors vim-keybinds <<< ~/.vimrc
