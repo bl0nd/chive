@@ -48,7 +48,7 @@ file.
 
 To build and install from source:
 
-```sh
+```
 git clone https://github.com/bl0nd/chive.git && cd chive
 make
 sudo make install
@@ -67,17 +67,11 @@ Chive is also available on many Linux distributions (as `chive`), including:
 
 ## Getting Started
 
-Chive switches between **variants** of **targets**. A variant is a version of a
-file section (e.g., `colorscheme gruvbox`). A target is a name for a file to be
-managed by Chive (e.g., `vim`, `vim-keybinds` `bash`).
+Chive allows you to switch between **variants** of **targets**. A variant is a
+version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `). A target is
+an alias for a file (e.g., `vim`, `bash`).
 
-Chive has three main operations:
-
-1. Target creation
-2. Variant creation
-3. Variant switching
-
-### Target Creation
+### 1. Target Creation
 
 To create a target, use the `--target | -t` flag:
 
@@ -117,17 +111,16 @@ Now Chive knows that both `vim-colors` and `vim-keybinds` manage `~/.vimrc`,
 while `bash` and `sway` manage `~/.bashrc` and `~/.config/sway/config`,
 respectively.
 
-#### Gotchas
-* To have shell expansion and substitution in here strings, don't quote the string.
+<!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
-* Here docs don't expand `~`, so be sure to use `$HOME` instead.
+<!--* Here docs don't expand `~`, so be sure to use `$HOME` instead.-->
 
-### Variant Creation
+### 2. Variant Creation
 
 Now that we have full targets, we can create **empty variants** with the
 `--variant | -v` flag.
 
-```console
+```sh
 $ chive -v solarized gruvbox
 vim-colors: added "solarized"
 vim-colors: added "gruvbox"
@@ -140,11 +133,9 @@ sway: added "gruvbox"
 ```
 
 We can see that if we don't specify a target, variants will be created for all
-targets.
+targets. Let's be a bit more specific:
 
-Let's be a bit more specific:
-
-```console
+```sh
 $ chive -v bash prompt-1
 bash: added "prompt-1"
 
@@ -157,14 +148,16 @@ bash: added "var2"
 
 You can see that order does not matter, and that we can specify multiple targets.
 
-### Rules
+### 3. Variant Switching
 
-#### Naming
+<!--### Rules-->
+
+<!--#### Naming-->
 <!--* Target and template names may consist of letters, numbers, `-`, and `_`.-->
 <!--* Target and template names may start with a letter or number.-->
 <!--* Target and template names must be unique across target and template namespaces-->
 
-#### Variants
+<!--#### Variants-->
 <!--In order to switch variants without requiring additional information in the-->
 <!--original target file, Chive needs some help. In particular, Chive needs to-->
 <!--somehow know where in the target to begin deleting and adding text/data.-->
@@ -180,3 +173,4 @@ You can see that order does not matter, and that we can specify multiple targets
 <!--exactly, otherwise Chive won't know where to start!-->
 
 ## License
+This project is released under the [MIT](LICENSE) license.
