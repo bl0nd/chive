@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# chive - Simple variant switcher
+# chive - File variant switcher
 
 PROG_NAME="chive"
 VERSION="0.1.0"
@@ -17,12 +17,12 @@ LANG=C
 usage() {
     printf '%s\n' "\
 usage: chive [--version] [--help] [-e | --edit] [-l | --list] [-c | --check]
-             [-a | --add <target> ...] [-v | --variant <target> | <variant> ...]
+             [-t | --target <target> ...] [-v | --variant <target> | <variant> ...]
              [-d | --delete <target> | <variant>] [[<target> ...] <variant>] ...
 
 Options:
 
-   -a, -add TARGET ...        add targets
+   -t, -target TARGET ...     add targets
    -v, --variant VARIANT ...  add variants
    -e, --edit VARIANT ...     edit variants
    -l, --list VARIANT ...     list variants
@@ -80,10 +80,11 @@ v_body() {
 
 # Add target files
 t_add() {
-    local targets=()
-    local name
+    local targets=() new_targets=()
+    local i name
+    local line t_paths=()
     local pattern
-    local new_targets=()
+    local path
 
     # Exit if no targets are specified
     (( "$#" == 0 )) && die "no targets specified"
@@ -91,29 +92,46 @@ t_add() {
     # Read arguments into array
     IFS=' ' read -r -a targets <<< "$@"
 
+    # Store STDIN data, if any
+    if ! test -t 0; then
+        while read -r line; do
+            t_paths+=("$line")
+        done
+    fi
+
     # Add targets
-    for name in "${targets[@]}"; do
+    for i in "${!targets[@]}"; do
+        name="${targets[i]}"
+
         # Check names to see if they're valid target names
         check_name "$name"
+
         if grep -m 1 -q ^"$name"$ <<< "$ALL_VARIANTS"; then
             die "\"$name\" is an existing variant"
         fi
 
-        # Create target directory if it doesn't exist and add the target to the
-        # list of new targets
-        [[ ! -d "$CONFIG_DIR/$name" ]] && {
-            mkdir -p "$CONFIG_DIR/$name"
-            new_targets+=("$name")
-        }
+        # Create target directory and config file
+        mkdir -p "$CONFIG_DIR/$name"
+        touch "$CONFIG_DIR/$name/.config"
+
+        # Handle custom target paths
+        if (( "${#t_paths[@]}" > 0 )); then
+            # If there are more targets than paths, use the last path for any
+            # remaining targets
+            (( "$i" < "${#t_paths[@]}" )) && path="${t_paths[i]}"
+            printf '%s\n' "$path" > "$CONFIG_DIR/$name/.config"
+        fi
+
+        new_targets+=("$name")
     done
 
     # Show all targets
-    if (( "${#new_targets}" == 0 )); then
-        # no new targets were added, so just list all targets in the same color
+    if (( "${#new_targets[@]}" == 0 )); then
+        # No new targets were added, so just list all targets in the same color
         # TODO: List specified targets in yellow or something
         (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_listing)
     else
-        # new targets were found, so highlight the new targets
+        # New targets were found, so highlight the new targets
         pattern="$(sed 's/ /|/g' <<< "${new_targets[@]}" | xargs printf '^(%s)$')"
         (cd "$CONFIG_DIR" && ls -1 | GREP_COLORS='cx=01;34' grep --color -E "$pattern" -A100 -B100)
     fi
@@ -127,7 +145,7 @@ v_create() {
     local variant
     local v_path
 
-    # Check if STDIN is open. If it is, then the user wants a custom variant
+    # Check if STDIN has data
     if ! test -t 0; then
         stdin_data=$(</dev/stdin)
     fi
@@ -189,7 +207,7 @@ v_setsome() {
         for target in "${targets[@]}"; do
             v_path="$CONFIG_DIR/$target/$variant"
 
-            # skip targets that don't have the template or have empty ones
+            # Skip targets that don't have the template or have empty ones
             [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
 
         done
@@ -379,7 +397,7 @@ main() {
                 exit
             ;;
             "--help") usage ;;
-            "--add" | "-a")
+            "--target" | "-t")
                 shift
                 t_add "$@"
                 exit
