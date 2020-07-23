@@ -69,17 +69,17 @@ Chive allows you to switch between **variants** of **targets**:
 * A variant is a version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
 * A target is an alias for a file (e.g., `vim`, `bash`).
 
-### 1. Target Creation
+### Target Creation
 
-To create a target, use the `--target | -t` flag:
+The first thing you'll want to do is create a target:
 
 ```sh
 $ chive -t vim bash
 ```
 
-This creates two **empty targets**: `vim` and `bash`. Empty targets contain no
-information on what file each target manages. Consequently, they are ignored
-by Chive. After all, Chive can't operate on what it doesn't know!
+This creates two **empty targets**: `vim` and `bash`. Empty targets do not
+manage any file, and so they are ignored by Chive. After all, Chive can't
+operate on what it doesn't know!
 
 This brings us to how Chive accepts data. In short, arbitrary data may be
 passed to Chive through `STDIN`, meaning that Bash facilities such as pipes
@@ -113,7 +113,7 @@ respectively.
 
 <!--* Here docs don't expand `~`, so be sure to use `$HOME` instead.-->
 
-### 2. Variant Creation
+### Variant Creation
 
 Now that we have full targets, we can create **empty variants** with the
 `--variant | -v` flag.
@@ -146,7 +146,7 @@ bash: added "var2"
 
 You can see that order does not matter, and that we can specify multiple targets.
 
-### 3. Variant Switching
+### Variant Switching
 
 <!--### Rules-->
 
