@@ -74,7 +74,7 @@ check_name() {
 #  1. Skip header (i.e., first line).
 #  2. Delete leading and trailing blank lines.
 v_body() {
-    tail -n +2 "$1" | tac | sed '/./,$!d' | tac | sed '/./,$!d'
+    tac "$1" | sed '/./,$!d' | tac | sed '/./,$!d'
 }
 
 
@@ -208,7 +208,6 @@ v_setsome() {
 
             # Skip targets that don't have the template or have empty ones
             [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
-
         done
     done
 }
@@ -216,7 +215,7 @@ v_setsome() {
 
 # Set a variant for all targets
 v_setall() {
-    local begin body body2 end match offset t_path t_path2 target v v_path variant
+    local alt_body alt_vpath begin body end match offset t_path target v_path variant
 
     # Prevent multiple variants from being specified for all targets
     (( "$#" != 1 )) && die "multiple templates cannot be applied to multiple targets"
@@ -226,6 +225,8 @@ v_setall() {
         # [*] instead of [@].
         for target in ${ALL_TARGETS[*]}; do
             v_path="$CONFIG_DIR/$target/$variant"
+
+            # reset
             match=0
 
             # Skip targets that don't have the current variant or if their
@@ -233,7 +234,7 @@ v_setall() {
             [[ ! -f "$v_path" || ! -s "$v_path" ]] && continue
 
             # Get target file name
-            t_path="$(head -n 1 "$v_path")"
+            t_path="$(head -n 1 "$CONFIG_DIR/$target/.config")"
 
             # If target file doesn't exist, die
             [[ ! -f "$t_path" ]] && die "file \"$t_path\" does not exist\n" "$t_path"
@@ -249,42 +250,37 @@ v_setall() {
                 # variant is in use. If so, we can replace it. If not, then
                 # there's nothing we can do so we'll consider this variant
                 # invalid.
-                for v in "$CONFIG_DIR"/"$target"/*; do
-                    # Skip empty variants
-                    [[ ! -s "$v" ]] && continue;
+                for alt_vpath in "$CONFIG_DIR"/"$target"/*; do
+                    # Skip empty/duplicate variants
+                    [[ ! -s "$alt_vpath" || "$alt_vpath" == "$v_path" ]] && continue;
 
-                    # Get variant config
-                    t_path2="$(head -n 1 "$v")"
+                    # Get variant body
+                    alt_body="$(v_body "$alt_vpath")"
 
-                    if [[ -f "$t_path2" ]]; then
-                        # Get variant body
-                        body2="$(v_body "$v")"
-
-                        # Check if variant has a match
-                        #
-                        # Note that we use t_path instead of t_path2. That's
-                        # because while this variant has a match, its target
-                        # path may be invalid or different (though I don't
-                        # really see that happening). So just to be safe, we
-                        # use t_path.
-                        if pcregrep -M -q "^${body2}$" "$t_path"; then
-                            match=1
-                            break
-                        fi
+                    # Check if variant has a match
+                    #
+                    # Note that we use t_path instead of t_path2. That's
+                    # because while this variant has a match, its target
+                    # path may be invalid or different (though I don't
+                    # really see that happening). So just to be safe, we
+                    # use t_path.
+                    if pcregrep -M -q "^${alt_body}$" "$t_path"; then
+                        match=1
+                        break
                     fi
                 done
 
                 if [[ "$match" -eq 1 ]]; then
                     # There was another variant that has a match
-                    begin="$(pcregrep -M -n "^${body2}$" "$t_path" | head -n 1 | cut -d: -f1)"
-                    offset="$(wc -l <<< "$body2")"
+                    begin="$(pcregrep -M -n "^${alt_body}$" "$t_path" | head -n 1 | cut -d: -f1)"
+                    offset="$(wc -l <<< "$alt_body")"
                     end=$((begin + offset - 1))
 
                     sed -i "${begin},${end}d" "$t_path"
                     awk -i inplace -v a="$begin" -v b="$body" "NR==a{print b}1" "$t_path"
                 else
                     # There was no match, so die
-                    die "invalid \"$target\" variant: \"$variant\""
+                    die "invalid variant: $target-$variant"
                 fi
             fi
         done
