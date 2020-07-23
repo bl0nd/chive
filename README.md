@@ -73,13 +73,13 @@ managed by Chive (e.g., `vim`, `vim-keybinds` `bash`).
 
 Chive has three main operations:
 
-1. Create targets.
-2. Create variants.
-3. Switch between variants.
+1. Target creation
+2. Variant creation
+3. Variant switching
 
 ### Target Creation
 
-To create a target, use the `--template | -t` flag:
+To create a target, use the `--target | -t` flag:
 
 ```sh
 $ chive -t vim bash
