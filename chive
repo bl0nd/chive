@@ -80,11 +80,8 @@ v_body() {
 
 # Add target files
 t_add() {
-    local targets=() new_targets=()
-    local i name
-    local line t_paths=()
-    local pattern
-    local path
+    local targets=() t_paths=() new_targets=()
+    local i line name old path pattern
 
     # Exit if no targets are specified
     (( "$#" == 0 )) && die "no targets specified"
@@ -111,8 +108,12 @@ t_add() {
         fi
 
         # Create target directory and config file
-        mkdir -p "$CONFIG_DIR/$name"
-        touch "$CONFIG_DIR/$name/.config"
+        [[ ! -d "$CONFIG_DIR/$name" ]] && {
+            mkdir -p "$CONFIG_DIR/$name"
+            touch "$CONFIG_DIR/$name/.config"
+        }
+
+        old="$(cat "$CONFIG_DIR/$name/.config")"
 
         # Handle custom target paths
         if (( "${#t_paths[@]}" > 0 )); then
@@ -122,13 +123,14 @@ t_add() {
             printf '%s\n' "$path" > "$CONFIG_DIR/$name/.config"
         fi
 
-        new_targets+=("$name")
+        if ! cmp --silent "$CONFIG_DIR/$name/.config" <<< "$old"; then
+            new_targets+=("$name")
+        fi
     done
 
-    # Show all targets
+    # Show targets
     if (( "${#new_targets[@]}" == 0 )); then
         # No new targets were added, so just list all targets in the same color
-        # TODO: List specified targets in yellow or something
         (cd "$CONFIG_DIR" && ls -1 -d -- */ | sed 's/.$//' | color_listing)
     else
         # New targets were found, so highlight the new targets
@@ -140,10 +142,8 @@ t_add() {
 
 # Create variants
 v_create() {
+    local stdin_data v_path variant
     local arr=("$@")
-    local stdin_data
-    local variant
-    local v_path
 
     # Check if STDIN has data
     if ! test -t 0; then
@@ -172,9 +172,8 @@ v_create() {
 
 
 v_add() {
-    local targets=()
-    local variants=()
     local args
+    local targets=() variants=()
 
     (( "$#" == 0 )) && die "no templates specified"
 
@@ -217,15 +216,10 @@ v_setsome() {
 
 # Set a variant for all targets
 v_setall() {
-    local variant v v_path
-    local target
-    local match
-    local t_path t_path2
-    local body body2
-    local begin offset end
+    local begin body body2 end match offset t_path t_path2 target v v_path variant
 
     # Prevent multiple variants from being specified for all targets
-    (( "$#" != 1 )) && die "multiple templates cannot be applied to all targets"
+    (( "$#" != 1 )) && die "multiple templates cannot be applied to multiple targets"
 
     for variant in "${variants[@]}"; do
         # ALL_TARGETS isn't an array, but a space-delimited string, so we use
@@ -299,10 +293,8 @@ v_setall() {
 
 
 v_set() {
-    local targets=()
-    local variants=()
-    local variant
-    local name
+    local name variant
+    local targets=() variants=()
 
     # Classify names as either targets or templates
     for name in "${@}"; do
@@ -342,8 +334,7 @@ v_set() {
 #  * If existing templates and targets are specified, assume the user wants to
 #    set some templates for some targets, and other templates for other targets.
 v_start() {
-    local name
-    local nontargets
+    local name nontargets
 
     if (( "$#" == 0 )); then
         # Nothing was given, so print all the things
