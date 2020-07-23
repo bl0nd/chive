@@ -56,7 +56,7 @@ sudo make install
 
 ### Packages
 
-Chive is available on many Linux distributions (as `chive`), including:
+Chive is also available on many Linux distributions (as `chive`), including:
 
 * Arch Linux
 * CentOS
@@ -68,11 +68,14 @@ Chive is available on many Linux distributions (as `chive`), including:
 ## Getting Started
 
 Chive switches between **variants** of **targets**. A variant is a version of a
-file section (e.g., `colorscheme gruvbox`). A target is a name for a file you
-want managed by Chive (e.g., `vim`, `vim-keybinds` `bash`).
+file section (e.g., `colorscheme gruvbox`). A target is a name for a file to be
+managed by Chive (e.g., `vim`, `vim-keybinds` `bash`).
 
-Chive has 3 main operations: create targets, create variants, and switch
-between variants.
+Chive has three main operations:
+
+1. Create targets.
+2. Create variants.
+3. Switch between variants.
 
 ### Target Creation
 
