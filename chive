@@ -178,11 +178,11 @@ v_create() {
             if [[ -z "$stdin_data" ]]; then
                 if [[ ! -f "$v_path" ]]; then
                     touch "$v_path"
-                    printf '%s\n' "$target: added \"$variant\""
+                    new+=("$target/$variant")
                 fi
             elif [[ ! -f "$v_path" ]]; then
                 printf '%s\n' "$stdin_data" > "$v_path"
-                printf '%s\n' "$target: added \"$variant\""
+                new+=("$target/$variant")
             fi
         done
     done
@@ -190,8 +190,8 @@ v_create() {
 
 
 v_add() {
-    local args
-    local targets=() variants=()
+    local arg args chosen height i rows tv variant
+    local completed=() new=() targets=() variants=()
 
     (( "$#" == 0 )) && die "no templates specified"
 
@@ -208,11 +208,32 @@ v_add() {
     done
 
     # If no targets are specified, create templates for all targets
-    if [[ "${#targets}" -eq 0 ]]; then
-        v_create ${ALL_TARGETS[*]}
+    if [[ "${#targets[@]}" -eq 0 ]]; then
+        v_create ALL_TARGETS[@]
     else
-        v_create "${targets[@]}"
+        v_create targets[@]
     fi
+
+    for i in "${!new[@]}"; do
+        if [[ "$EDIT" -eq 1 ]]; then
+            # If --edit was specified, use fzf to show relevant variants
+            rows="$(tr ' ' '\n' <<< "${new[@]}" | awk 'NF')"
+            height=$(($(wc -l <<< "$rows") + 2))
+            chosen="$(fzf -0 --height="$height" <<< "$rows")"  # TODO (?): preview
+
+            (( "${#chosen}" == 0 )) && break
+
+            # Remove already selected entries from listing
+            new=( "${new[@]/"$chosen"}" )
+            completed+=("$chosen")
+        else
+            completed+=("${new[i]}")
+        fi
+    done
+
+    for tv in "${completed[@]}"; do
+        printf '%s"\n' "$(sed 's/\//: added \"/' <<< "$tv")"
+    done
 }
 
 
