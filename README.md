@@ -1,14 +1,13 @@
 # Chive
 
-Chive is a file variant switcher. In short, Chive can replace sections of a
-file with other text or data without requiring modifications to the original
-file.
+Have you ever wanted to easily switch between different versions of `~/.vimrc`
+or `~/.bashrc` (perhaps you often change Vim color schemes and Bash prompts)?
+Well, Chive has you covered!
+
+Chive is a file variant switcher. That is, it can replace sections of a file
+with other text or data without requiring modifications to the original file.
 
 <!--## Motivation-->
-
-<!--Suppose you would like to easily switch between different versions of-->
-<!--`~/.vimrc` and `~/.bashrc` (perhaps you often change Vim color schemes and Bash-->
-<!--prompts).-->
 
 <!--Traditionally, you'd more or less maintain entire copies of both files and-->
 <!--switch between the copies manually. However,-->
@@ -67,9 +66,10 @@ Chive is also available on many Linux distributions (as `chive`), including:
 
 ## Getting Started
 
-Chive allows you to switch between **variants** of **targets**. A variant is a
-version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `). A target is
-an alias for a file (e.g., `vim`, `bash`).
+Chive allows you to switch between **variants** of **targets**:
+
+* A variant is a version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
+* A target is an alias for a file (e.g., `vim`, `bash`).
 
 ### 1. Target Creation
 
