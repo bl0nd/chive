@@ -81,7 +81,7 @@ v_body() {
 # Add target files
 t_add() {
     local targets=() t_paths=() new_targets=()
-    local i line name old path pattern
+    local cfg i line name old path pattern was_empty
 
     # Exit if no targets are specified
     (( "$#" == 0 )) && die "no targets specified"
@@ -99,32 +99,38 @@ t_add() {
     # Add targets
     for i in "${!targets[@]}"; do
         name="${targets[i]}"
+        cfg="$CONFIG_DIR/$name/.config"
+
+        # reset
+        new=0
 
         # Check names to see if they're valid target names
         check_name "$name"
 
-        if grep -m 1 -q ^"$name"$ <<< "$ALL_VARIANTS"; then
+        if in_array ALL_VARIANTS[@] "$name"; then
             die "\"$name\" is an existing variant"
         fi
 
         # Create target directory and config file
         [[ ! -d "$CONFIG_DIR/$name" ]] && {
             mkdir -p "$CONFIG_DIR/$name"
-            touch "$CONFIG_DIR/$name/.config"
+            touch "$cfg"
+            new_targets+=("$name")
         }
 
-        old="$(cat "$CONFIG_DIR/$name/.config")"
-
-        # Handle custom target paths
         if (( "${#t_paths[@]}" > 0 )); then
-            # If there are more targets than paths, use the last path for any
-            # remaining targets
-            (( "$i" < "${#t_paths[@]}" )) && path="${t_paths[i]}"
-            printf '%s\n' "$path" > "$CONFIG_DIR/$name/.config"
-        fi
+            # Handle custom target paths
+            old="$(sha1sum "$cfg" | cut -d' ' -f1)"
 
-        if ! cmp --silent "$CONFIG_DIR/$name/.config" <<< "$old"; then
-            new_targets+=("$name")
+            # If targets > paths, use the last path for any remaining targets
+            (( "$i" < "${#t_paths[@]}" )) && path="${t_paths[i]}"
+
+            # Write path to target config
+            printf '%s' "$path" > "$cfg"
+
+            # Check if new config is different from old one for highlighting
+            new="$(sha1sum "$cfg" | cut -d' ' -f1)"
+            [[ "$old" != "$new" ]] && new_targets+=("$name")
         fi
     done
 
