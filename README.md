@@ -75,34 +75,25 @@ The first thing you'll need to do is create a target:
 
 ```console
 $ chive -t vim bash
-vim
-bash
 ```
 
 This creates two **empty targets**: `vim` and `bash`. As the name suggests,
-empty targets do not manage any file. Consequently, they are ignored by Chive.
-After all, Chive can't operate on what it doesn't know!
+empty targets don't manage anything. Consequently, they are ignored by Chive.
 
-This brings us to how Chive accepts data. In short, arbitrary data may be
-passed to Chive through `STDIN`, meaning that built-in Bash facilities such as
-pipes (`|`), input redirection (`<`), here docs (`<<`), and here strings
-(`<<<`) can be used configure Chive in an easy and elegant way.
+So how do we tell Chive what each target manages? Through `STDIN`! This means
+that built-in Bash facilities such as pipes (`|`), input redirection (`<`),
+here docs (`<<`), and here strings (`<<<`) can be used configure Chive in an
+easy and elegant way.
 
-Thus, to create **full targets** or reconfigure empty ones:
+Thus, to create **full targets** (or reconfigure empty ones):
 
 ```console
 $ chive -t vim-colors vim-keybinds <<< ~/.vimrc
-vim-colors
-vim-keybinds
 
 $ chive -t bash sway << EOF
 $HOME/.bashrc
 $HOME/.config/sway/config
 EOF
-vim-colors
-vim-keybinds
-bash
-sway
 ```
 
 Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
@@ -128,9 +119,6 @@ alacritty: added "solarized"
 alacritty: added "gruvbox"
 
 $ chive -t sway <<< ~/.config/sway/config
-alacritty
-sway
-vim
 
 $ chive -v zenburn sway vim solarized
 sway: added "zenburn"
@@ -142,12 +130,12 @@ If don't specify any targets, the variants will be created for all targets. If
 we do provide targets, the variants will be created only for those targets.
 Also, note that order doesn't matter when listing out targets and variants.
 
-So far, we've only added **empty variants**. But we can use `STDIN` to add
-**full variants**, right? Well, yes and no. Unfortunately, when multiple
-variants become involved, things start to break down because 1) variants are
-often multi-line, so we can't distinguish between them as easily as we could
-target paths; and 2) providing a cookie-cutter variant often doesn't make any
-sense, especially when multiple targets are involved.
+So far, we've only added empty variants. But surely we can use `STDIN` to add
+more useful ones, right? Well, yes and no. Unfortunately, when multiple
+variants get involved, things start to break down: variants are often
+multi-line, so we can't distinguish between them as easily as we could target
+paths; and cookie-cutter variants often don't make sense when multiple targets
+are involved.
 
 Thus, the approach I suggest is as follows:
 
@@ -166,8 +154,9 @@ Thus, the approach I suggest is as follows:
   ```
 
 * When adding multiple variants, use the `--edit | -e` flag, which will bring
-  up all relevant variant files in `fzf` so that you may edit each one
-  manually.
+  up all relevant variants in `fzf` so that you may edit each one:
+
+<!--TODO: Use GIF here-->
 
   ```console
   $ chive
