@@ -60,6 +60,18 @@ pathname() {
 }
 
 
+in_array() {
+    local arr=("${!1}")
+    local val="$2"
+
+    for elem in "${arr[@]}"; do
+        [[ "$elem" == "$val" ]] && return 0
+    done
+
+    return 1
+}
+
+
 # Does a general check on target and variant names
 check_name() {
     if [[ ! "$1" =~ ^[[:alnum:]](.*) ]]; then
@@ -149,7 +161,7 @@ t_add() {
 # Create variants
 v_create() {
     local stdin_data v_path variant
-    local arr=("$@")
+    local arr=("${!1}")
 
     # Check if STDIN has data
     if ! test -t 0; then
@@ -188,7 +200,7 @@ v_add() {
     for arg in "${args[@]}"; do
         check_name "$arg"
 
-        if grep -m 1 -q ^"$arg"$ <<< "$ALL_TARGETS"; then
+        if in_array ALL_TARGETS[@] "$arg"; then
             targets+=("$arg")
         else
             variants+=("$arg")
@@ -224,12 +236,10 @@ v_setall() {
     local alt_body alt_vpath begin body end match offset t_path target v_path variant
 
     # Prevent multiple variants from being specified for all targets
-    (( "$#" != 1 )) && die "multiple templates cannot be applied to multiple targets"
+    (( "${#variants[@]}" > 1 )) && die "multiple templates cannot be applied to multiple targets"
 
     for variant in "${variants[@]}"; do
-        # ALL_TARGETS isn't an array, but a space-delimited string, so we use
-        # [*] instead of [@].
-        for target in ${ALL_TARGETS[*]}; do
+        for target in "${ALL_TARGETS[@]}"; do
             v_path="$CONFIG_DIR/$target/$variant"
 
             # reset
@@ -277,7 +287,7 @@ v_setall() {
                 done
 
                 if [[ "$match" -eq 1 ]]; then
-                    # There was another variant that has a match
+                    # Another variant that has a match, so we can switch
                     begin="$(pcregrep -M -n "^${alt_body}$" "$t_path" | head -n 1 | cut -d: -f1)"
                     offset="$(wc -l <<< "$alt_body")"
                     end=$((begin + offset - 1))
@@ -300,7 +310,7 @@ v_set() {
 
     # Classify names as either targets or templates
     for name in "${@}"; do
-        if grep -m 1 -q ^"$name"$ <<< "$ALL_TARGETS"; then
+        if in_array ALL_TARGETS[@] "$name"; then
             targets+=("$name")
         else
             variants+=("$name")
@@ -309,10 +319,10 @@ v_set() {
 
     if (( "${#targets}" == 0 )); then
         # No targets were specified, so set the variant for all
-        v_setall "$@"
+        v_setall
     else
         # Targets were specified, so set variants appropriately
-        v_setsome
+        v_setsome "$@"
     fi
 }
 
@@ -378,8 +388,8 @@ main() {
         mkdir -p "$CONFIG_DIR"
     else
         # Get all variant and target names if configuration directory exists
-        ALL_VARIANTS="$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
-        ALL_TARGETS="$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
+        readarray -t ALL_VARIANTS <<< "$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
+        readarray -t ALL_TARGETS <<< "$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
     fi
 
     # Process command-line options/arguments
