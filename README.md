@@ -131,7 +131,7 @@ vim: added "ayu"
 
 Now, empty variants aren't really useful, so let's update them with some data:
 
-* If adding or changing a single variant, simply pass in data through `STDIN`:
+* If adding a single variant, simply pass in data through `STDIN`:
 
   ```console
   $ chive -v vim solarized <<< "colorscheme solarized"
@@ -141,8 +141,8 @@ Now, empty variants aren't really useful, so let's update them with some data:
   alacritty: added "gruvbox"
   ```
 
-* If working with multiple variants, use the `--edit | -e` flag to bring up
-  relevant variants in `fzf` so that you may edit each one individually:
+* If adding multiple variants, use the `--edit | -e` flag to bring up relevant
+  variants in `fzf` so that you may edit each one individually:
 
   ```console
   $ chive -e -v solarized zenburn
