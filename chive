@@ -314,6 +314,10 @@ v_setsome() {
     local copy=() current_targets=() done_targets=()
     local flag=0
 
+    if ! in_array variants[@] "$(cut -d' ' -f1 <<< "$@")"; then
+        die "missing target for variant \"$(cut -d' ' -f1 <<< "$@")\""
+    fi
+
     for name in "$@"; do
         if in_array targets[@] "$name"; then
             current_targets+=("$name")
