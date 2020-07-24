@@ -72,32 +72,36 @@ First, create some targets using the `--target | -t` flag:
 
 ```console
 $ chive -t vim alacritty
-```
-
-This creates two targets: `vim` and `alacritty`:
-
-```console
-$ chive
 alacritty
 vim
 ```
 
-However, we've made a mistake! Recall that targets are simply aliases for
-files. But if you look back, you'll notice that we never actually provided any
-file paths for either of our targets! Consequently, Chive simply ignores the
-`vim` and `alacritty` targets. After all, how can Chive operate on Vim's
+This creates two targets: `vim` and `alacritty`.
+
+However, we've already made a mistake! Recall that targets are simply aliases
+for files. But if you look back, you'll notice that we never actually provided
+any file paths for either of our targets! Consequently, Chive simply ignores
+the `vim` and `alacritty` targets. After all, how can Chive operate on Vim's
 configuration file if it doesn't know where it is?
 
-To fix this, we simply pass our file paths to Chive's `STDIN`:
+To fix this, simply pass in your file paths to Chive's `STDIN`:
 
 ```console
 $ chive -t vim <<< ~/.vimrc
+vim
+
 $ chive -t alacritty <<< ~/.config/alacritty/alacritty.yml
+alacritty
+vim
+
+# OR
 
 $ chive -t vim alacritty << EOF
-$HOME/.vimrc
-$HOME/.config/alacritty/alacritty.yml
-EOF
+> $HOME/.vimrc
+> $HOME/.config/alacritty/alacritty.yml
+> EOF
+alacritty
+vim
 ```
 
 Now Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
