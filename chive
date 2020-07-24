@@ -91,7 +91,7 @@ v_body() {
 
 # Add target files
 t_add() {
-    local targets=() t_paths=() new_targets=()
+    local targets=() t_paths=() new_targets=() v_all_copy=()
     local cfg i line name old path pattern
 
     # Exit if no targets are specified
@@ -115,10 +115,10 @@ t_add() {
         # reset
         new=0
 
-        # Check names to see if they're valid target names
         check_name "$name"
 
-        if in_array ALL_VARIANTS[@] "$name"; then
+        IFS=' ' read -r -a v_all_copy <<< "${ALL_VARIANTS[@]//*\//}"
+        if in_array v_all_copy[@] "$name"; then
             die "\"$name\" is an existing variant"
         fi
 
@@ -187,6 +187,25 @@ v_create() {
     done
 }
 
+v_fzf() {
+    local chosen height rows
+    local arr=("${!1}") copy=("${arr[@]}")
+
+    for i in "${!copy[@]}"; do
+        # If --edit was specified, use fzf to show relevant variants
+        rows="$(tr ' ' '\n' <<< "${copy[@]}" | awk 'NF')"
+        height=$(($(wc -l <<< "$rows") + 2))
+        chosen="$(fzf -0 --height="$height" <<< "$rows")"
+
+        (( "${#chosen}" == 0 )) && break
+
+        # Edit variant
+        "$EDITOR" "$CONFIG_DIR/$chosen"
+
+        # Remove already selected entries from listing
+        copy=( "${copy[@]/"$chosen"}" )
+    done
+}
 
 v_add() {
     local arg args chosen height i rows tv variant
@@ -213,24 +232,7 @@ v_add() {
         v_create targets[@]
     fi
 
-    if [[ "$EDIT" -eq 1 ]]; then
-        copy=("${new[@]}")
-
-        for i in "${!copy[@]}"; do
-            # If --edit was specified, use fzf to show relevant variants
-            rows="$(tr ' ' '\n' <<< "${copy[@]}" | awk 'NF')"
-            height=$(($(wc -l <<< "$rows") + 2))
-            chosen="$(fzf -0 --height="$height" <<< "$rows")"  # TODO (?): preview
-
-            (( "${#chosen}" == 0 )) && break
-
-            # Edit variant
-            "$EDITOR" "$CONFIG_DIR/$chosen"
-
-            # Remove already selected entries from listing
-            copy=( "${copy[@]/"$chosen"}" )
-        done
-    fi
+    [[ "$EDIT" -eq 1 ]] && v_fzf new[@]
 
     for tv in "${new[@]}"; do
         printf '%s"\n' "$(sed 's/\//: added \"/' <<< "$tv")"
@@ -413,16 +415,30 @@ v_set() {
 #  * If existing variants and targets are specified, assume the user wants to
 #    set some variants for some targets, and other variants for other targets.
 v_start() {
-    local name nontargets
+    local name nontargets v
+    local fzf_arr=()
+
+    [[ ! "${ALL_TARGETS[*]}" ]] && {
+        printf '%s\n' "No targets or variants."
+        exit 0
+    }
 
     if (( "$#" == 0 )); then
-        if [[ ! "${ALL_TARGETS[*]}" ]]; then
-            printf '%s\n' "No targets or variants."
+        # No arguments provided
+
+        if [[ "$EDIT" -eq 1 ]]; then
+            # Edit all existing variants
+            for v in "${ALL_VARIANTS[@]}"; do
+                fzf_arr+=("$v")
+            done
+
+            v_fzf fzf_arr[@]
         else
+            # List out all variants
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
         fi
     else
-        # Arguments were specified, so go through the decision process
+        # Arguments were specified
 
         # Run names through some general checks
         for name in "${@}"; do
@@ -458,8 +474,7 @@ main() {
         mkdir -p "$CONFIG_DIR"
     fi
 
-    # Get all variant and target names if configuration directory exists
-    readarray -t ALL_VARIANTS <<< "$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
+    readarray -t ALL_VARIANTS <<< "$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 -name ".*" -prune -o -print | sed "s/${CONFIG_DIR//\//\\\/}\///")"
     readarray -t ALL_TARGETS <<< "$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
 
     # Process command-line options/arguments
