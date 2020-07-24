@@ -158,14 +158,9 @@ And that's it! You can now easily switch between different color schemes in
 both Vim and Alacritty!
 
 ```bash
-# all = zenburn
-$ chive zenburn
-
-# vim = solarized | alacritty = dracula
-$ chive vim solarized alacritty dracula
-
-# vim = solarized | alacritty = dracula | others = zenburn
-$ chive vim solarized alacritty dracula zenburn
+$ chive ayu                        # all = ayu
+$ chive vim ayu alacritty dracula  # vim = ayu | alacritty = dracula
+$ chive vim alacritty ayu dracula  # vim & alacritty = ayu | others = dracula
 ```
 
 <!--### Rules-->
