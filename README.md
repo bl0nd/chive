@@ -157,7 +157,7 @@ $ chive -e -v dracula onedark
 And that's it! You can now easily switch between different color schemes in
 both Vim and Alacritty!
 
-```sh
+```bash
 # all = zenburn
 $ chive zenburn
 
