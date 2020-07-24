@@ -78,13 +78,13 @@ vim
 
 This creates two targets: `vim` and `alacritty`.
 
-However, we've already made a mistake! Recall that targets are simply aliases
-for files. But if you look back, you'll notice that we never actually provided
-any file paths for either of our targets! Consequently, Chive simply ignores
-the `vim` and `alacritty` targets. After all, how can Chive operate on Vim's
-configuration file if it doesn't know where it is?
+However, we've already made a mistake! Recall that targets are aliases for
+files. But notice that we never actually provided any file paths for either of
+our targets! Consequently, Chive simply ignores the `vim` and `alacritty`
+targets. After all, how can Chive operate on Vim's configuration file if it
+doesn't know where it is?
 
-To fix this, simply pass in your file paths to Chive's `STDIN`:
+To fix this, pass in your file paths to Chive's `STDIN`:
 
 ```console
 $ chive -t vim <<< ~/.vimrc
@@ -104,8 +104,8 @@ alacritty
 vim
 ```
 
-Now Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
-`~/.config/alacritty/alacritty.yml`. We're back on the right track!
+Chive now knows that `vim` manages `~/.vimrc`, and `alacritty` manages
+`~/.config/alacritty/alacritty.yml`!
 
 <!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
@@ -113,8 +113,8 @@ Now Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
 
 ### Variant Creation
 
-Now that we have our targets, we need to create variants for each of them. To
-do this, use the `--variant | -v` flag:
+The next step is to create variants for each of targets. To do this, use the
+`--variant | -v` flag:
 
 ```console
 $ chive -v solarized gruvbox
