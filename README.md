@@ -138,7 +138,7 @@ Now, empty variants aren't really useful, so let's update them with some data:
   $ chive -v vim solarized <<< "colorscheme solarized"
   vim: added "solarized"
 
-  $ curl https://raw.githubusercontent.com/eendroroy/alacritty-theme/master/themes/gruvbox_dark.yaml | chive -v alacritty gruvbox
+  $ curl https://raw.githubusercontent.com/.../gruvbox_dark.yaml | chive -v alacritty gruvbox
   alacritty: added "gruvbox"
   ```
 
