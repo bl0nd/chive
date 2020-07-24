@@ -126,35 +126,33 @@ sway: added "solarized"
 vim: added "zenburn"
 ```
 
-If don't specify any targets, the variants will be created for all targets. If
-we do provide targets, the variants will be created only for those targets.
+If no targets are specified, the variants will be created for all targets. If
+targets are specified, the variants will be created only for those targets.
 Also, note that order doesn't matter when listing out targets and variants.
 
-So far, we've only added empty variants. But surely we can use `STDIN` to add
-more useful ones, right? Well, yes and no. Unfortunately, when multiple
-variants get involved, things start to break down: variants are often
-multi-line, so we can't distinguish between them as easily as we could target
-paths; and cookie-cutter variants often don't make sense when multiple targets
-are involved.
+So far, we've only added empty variants. But we can just use `STDIN` to add
+full variants, right? Well, yes and no. Unfortunately, when multiple variants
+get involved, things start to break down: variants are often multi-line, so its
+hard to distinguish between their data, and cookie-cutter variants often don't
+make sense when multiple targets are involved.
 
-Thus, the approach I suggest is as follows:
+Thus, I suggest using `STDIN` only for creating or modifying individual
+variants:
 
-* When possible, create full variants or modify empty ones using `STDIN`:
+```console
+$ chive
+alacritty
+vim
 
-  ```console
-  $ chive
-  alacritty
-  vim
+$ chive -v vim solarized <<< "colorscheme solarized"
+vim: added "solarized"
 
-  $ chive -v vim solarized <<< "colorscheme solarized"
-  vim: added "solarized"
+$ curl ... | chive -v alacritty gruvbox
+alacritty: added "gruvbox"
+```
 
-  $ curl ... | chive -v alacritty gruvbox
-  alacritty: added "gruvbox"
-  ```
-
-* When adding multiple variants, use the `--edit | -e` flag, which will bring
-  up all relevant variants in `fzf` so that you may edit each one:
+When adding multiple variants, use the `--edit | -e` flag, which will bring up
+all relevant variants in `fzf` so that you may edit each one:
 
 <!--TODO: Use GIF here-->
 
@@ -170,6 +168,7 @@ Thus, the approach I suggest is as follows:
 	3/3
   >
   ```
+
 ### Variant Switching
 
 <!--### Rules-->
