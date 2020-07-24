@@ -193,7 +193,7 @@ v_add() {
     local arg args chosen height i rows tv variant
     local completed=() new=() targets=() variants=()
 
-    (( "$#" == 0 )) && die "no templates specified"
+    (( "$#" == 0 )) && die "no variants specified"
 
     IFS=' ' read -r -a args <<< "$*"
 
@@ -207,7 +207,7 @@ v_add() {
         fi
     done
 
-    # If no targets are specified, create templates for all targets
+    # If no targets are specified, create variants for all targets
     if [[ "${#targets[@]}" -eq 0 ]]; then
         v_create ALL_TARGETS[@]
     else
@@ -312,10 +312,17 @@ v_switch() {
 # Set variants for specific targets
 v_setsome() {
     local copy=() current_targets=() done_targets=()
-    local flag=0
+    local first flag last
 
-    if ! in_array variants[@] "$(cut -d' ' -f1 <<< "$@")"; then
-        die "missing target for variant \"$(cut -d' ' -f1 <<< "$@")\""
+    first="$(cut -d' ' -f1 <<< "$@")"
+    last="$(awk '{print $NF}' <<< "$@")"
+
+    if in_array variants[@] "$first"; then
+        # If first name is variant
+        die "missing target for variant \"$first\""
+    elif in_array targets[@] "$last"; then
+        # If last name is target
+        die "missing variant for target \"$last\""
     fi
 
     for name in "$@"; do
@@ -369,7 +376,7 @@ v_set() {
     local name variant
     local targets=() variants=()
 
-    # Classify names as either targets or templates
+    # Classify names as either targets or variants
     for name in "${@}"; do
         if in_array ALL_TARGETS[@] "$name"; then
             targets+=("$name")
@@ -390,22 +397,22 @@ v_set() {
 
 # Zero or more arguments were given but no options were specified, so either:
 #
-#  1. List templates of all/some targets.
-#  2. Set templates for all/some targets.
+#  1. List variants of all/some targets.
+#  2. Set variants for all/some targets.
 #
 # The decision process is like so:
 #
-#  * If no arguments are given, assume the user wants to see the templates for
+#  * If no arguments are given, assume the user wants to see the variants for
 #    all targets.
 #
 #  * If existing targets are specified, assume the user wants to see the
-#    templates for those targets.
+#    variants for those targets.
 #
-#  * If an existing template is specified, assume the user wants to set that
-#    template for all targets.
+#  * If an existing variant is specified, assume the user wants to set that
+#    variant for all targets.
 #
-#  * If existing templates and targets are specified, assume the user wants to
-#    set some templates for some targets, and other templates for other targets.
+#  * If existing variants and targets are specified, assume the user wants to
+#    set some variants for some targets, and other variants for other targets.
 v_start() {
     local name nontargets
 
@@ -424,7 +431,7 @@ v_start() {
         nontargets="$(cd "$CONFIG_DIR" && file "$@" | grep "cannot open" | cut -d: -f1)"
 
         if [[ -z "$nontargets" ]]; then
-            # Only targets were specified, so list their templates
+            # Only targets were specified, so list their variants
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_listing)
         else
             # Nontargets were found!
