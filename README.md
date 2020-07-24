@@ -143,15 +143,30 @@ If adding multiple variants, use the `--edit | -e` flag to bring up relevant
 variants in `fzf` so that you may edit each one individually:
 
 ```console
-$ chive -e -v solarized zenburn
-alacritty/solarized
-alacritty/zenburn
-> vim/zenburn
-3/3
+$ chive -e -v dracula onedark
+  alacritty/dracula
+  alacritty/onedark
+  vim/dracula
+> vim/onedark
+  4/4
 >
 ```
 
 ### Variant Switching
+
+And that's it! You can now easily switch between different color schemes in
+both Vim and Alacritty!
+
+```sh
+# all = zenburn
+$ chive zenburn
+
+# vim = solarized | alacritty = dracula
+$ chive vim solarized alacritty dracula
+
+# vim = solarized | alacritty = dracula | others = zenburn
+$ chive vim solarized alacritty dracula zenburn
+```
 
 <!--### Rules-->
 
