@@ -2,15 +2,16 @@
 
 Chive is a tool that switches between different versions of file sections.
 
-* [Chive](#chive)
-    * [Installation](#installation)
-        * [Manual](#manual)
-        * [Packages](#packages)
-    * [Getting Started](#getting-started)
-        * [Target Creation](#target-creation)
-        * [Variant Creation](#variant-creation)
-        * [Variant Switching](#variant-switching)
-    * [License](#license)
+# Table of Contents
+
+* [Installation](#installation)
+    * [Manual](#manual)
+    * [Packages](#packages)
+* [Getting Started](#getting-started)
+    * [Target Creation](#target-creation)
+    * [Variant Creation](#variant-creation)
+    * [Variant Switching](#variant-switching)
+* [License](#license)
 
 <!--of **targets**: a variant is a file section (e.g., `colorscheme-->
 <!--gruvbox`, `PS=❯ `); a target is an alias for a file (e.g., `vim`, `bash`).-->
