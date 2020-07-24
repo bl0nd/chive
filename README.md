@@ -128,29 +128,28 @@ vim: added "zenburn"
 vim: added "ayu"
 ```
 
-Now, empty variants aren't really useful, so let's update them with some data:
+Now, empty variants aren't really useful, so let's update them with some
+content. If adding a single variant, pass in data through `STDIN`:
 
-* If adding a single variant, simply pass in data through `STDIN`:
+```console
+$ chive -v vim solarized <<< "colorscheme solarized"
+vim: added "solarized"
 
-  ```console
-  $ chive -v vim solarized <<< "colorscheme solarized"
-  vim: added "solarized"
+$ curl https://raw.githubusercontent.com/.../gruvbox_dark.yaml | chive -v alacritty gruvbox
+alacritty: added "gruvbox"
+```
 
-  $ curl https://raw.githubusercontent.com/.../gruvbox_dark.yaml | chive -v alacritty gruvbox
-  alacritty: added "gruvbox"
-  ```
+If adding multiple variants, use the `--edit | -e` flag to bring up relevant
+variants in `fzf` so that you may edit each one individually:
 
-* If adding multiple variants, use the `--edit | -e` flag to bring up relevant
-  variants in `fzf` so that you may edit each one individually:
-
-  ```console
-  $ chive -e -v solarized zenburn
-    alacritty/solarized
-    alacritty/zenburn
-  > vim/zenburn
-    3/3
-  >
-  ```
+```console
+$ chive -e -v solarized zenburn
+alacritty/solarized
+alacritty/zenburn
+> vim/zenburn
+3/3
+>
+```
 
 ### Variant Switching
 
