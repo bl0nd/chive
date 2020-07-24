@@ -92,7 +92,7 @@ v_body() {
 # Add target files
 t_add() {
     local targets=() t_paths=() new_targets=()
-    local cfg i line name old path pattern was_empty
+    local cfg i line name old path pattern
 
     # Exit if no targets are specified
     (( "$#" == 0 )) && die "no targets specified"
@@ -190,7 +190,7 @@ v_create() {
 
 v_add() {
     local arg args chosen height i rows tv variant
-    local completed=() new=() targets=() variants=()
+    local new=() targets=() variants=()
 
     (( "$#" == 0 )) && die "no variants specified"
 
