@@ -2,7 +2,7 @@
 
 Chive is a tool that switches between different versions of file sections.
 
-# Table of Contents
+## Contents
 
 * [Installation](#installation)
     * [Manual](#manual)
