@@ -119,9 +119,8 @@ alacritty: added "solarized"
 alacritty: added "gruvbox"
 ```
 
-If you only want to create variants for a particular target, simply add the
-target's name to the list (note that order does not matter, just write them
-however they pop into your head):
+If you only want to create variants for certain targets, simply add their names
+to the list (note that order does not matter):
 
 ```console
 $ chive -v zenburn vim ayu
