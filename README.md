@@ -1,9 +1,9 @@
 # Chive
 
-Have you ever wanted to easily switch between different versions of `~/.vimrc`
-or `~/.bashrc` (perhaps you often change Vim color schemes and Bash prompts)?
-Well, look no further!  Chive allows you to easily replace sections of a file
-with other text or data without requiring modifications to the original file.
+Chive allows you to switch between **variants** of **targets**:
+
+* A variant is a a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
+* A target is an alias for a file (e.g., `vim`, `bash`).
 
 <!--## Motivation-->
 
@@ -64,40 +64,44 @@ Chive is also available on many Linux distributions (as `chive`), including:
 
 ## Getting Started
 
-Chive allows you to switch between **variants** of **targets**:
-
-* A variant is a version of a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
-* A target is an alias for a file (e.g., `vim`, `bash`).
+Suppose you want to switch between different colorschemes in Vim and Alacritty.
 
 ### Target Creation
 
-The first thing you'll need to do is create a target:
+First, create some targets using the `--target | -t` flag:
 
 ```console
-$ chive -t vim bash
+$ chive -t vim alacritty
 ```
 
-This creates two **empty targets**: `vim` and `bash`. As the name suggests,
-empty targets don't manage anything. Consequently, they are ignored by Chive.
-So how do we tell Chive what each target manages? Through `STDIN`, of course!
-
-This means that built-in Bash facilities such as pipes (`|`), input redirection
-(`<`), here docs (`<<`), and here strings (`<<<`) can be used configure Chive
-in an easy and elegant way.
-
-Thus, to create **full targets** (or reconfigure empty ones):
+This creates two targets: `vim` and `alacritty`:
 
 ```console
-$ chive -t vim-colors vim-keybinds <<< ~/.vimrc
+$ chive
+alacritty
+vim
+```
 
-$ chive -t bash sway << EOF
-$HOME/.bashrc
-$HOME/.config/sway/config
+However, we've made a mistake! Recall that targets are simply aliases for
+files. But if you look back, you'll notice that we never actually provided any
+file paths for either of our targets! Consequently, Chive simply ignores the
+`vim` and `alacritty` targets. After all, how can Chive operate on Vim's
+configuration file if it doesn't know where it is?
+
+To fix this, we simply pass our file paths to Chive's `STDIN`:
+
+```console
+$ chive -t vim <<< ~/.vimrc
+$ chive -t alacritty <<< ~/.config/alacritty/alacritty.yml
+
+$ chive -t vim alacritty << EOF
+$HOME/.vimrc
+$HOME/.config/alacritty/alacritty.yml
 EOF
 ```
 
-Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
-`sway` manage `~/.bashrc` and `~/.config/sway/config`, respectively.
+Now Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
+`~/.config/alacritty/alacritty.yml`. We're back on the right track!
 
 <!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
@@ -105,30 +109,28 @@ Here, both `vim-colors` and `vim-keybinds` manage `~/.vimrc`, while `bash` and
 
 ### Variant Creation
 
-The next step is to create variants with the `--variant | -v` flag:
+Now that we have our targets, we need to create variants for each of them. To
+do this, use the `--variant | -v` flag:
 
 ```console
-$ chive
-alacritty
-vim
-
 $ chive -v solarized gruvbox
 vim: added "solarized"
 vim: added "gruvbox"
 alacritty: added "solarized"
 alacritty: added "gruvbox"
-
-$ chive -t sway <<< ~/.config/sway/config
-
-$ chive -v zenburn sway vim solarized
-sway: added "zenburn"
-sway: added "solarized"
-vim: added "zenburn"
 ```
 
-If no targets are specified, the variants will be created for all targets. If
-targets are specified, the variants will be created only for those targets.
-Also, note that order doesn't matter when listing out targets and variants.
+We can see that if we don't specify any targets, the `solarized` and `gruvbox`
+variants are created for all of our targets.
+
+If we only want to create variants for a particular target, we just add the
+target's name to the list (note that order does not matter):
+
+```console
+$ chive -v zenburn vim ayu
+vim: added "zenburn"
+vim: added "ayu"
+```
 
 So far, we've only added empty variants. But we can just use `STDIN` to add
 full variants, right? Well, yes and no. Unfortunately, when multiple variants
