@@ -64,11 +64,12 @@ Chive is also available on many Linux distributions (as `chive`), including:
 
 ## Getting Started
 
-Suppose you want to switch between different colorschemes in Vim and Alacritty.
+Suppose you want to switch between different color-schemes in Vim and
+Alacritty.
 
 ### Target Creation
 
-First, create some targets using the `--target | -t` flag:
+The first thing you'll need to do is create **targets**, or file aliases:
 
 ```console
 $ chive -t vim alacritty
@@ -76,15 +77,11 @@ alacritty
 vim
 ```
 
-This creates two targets: `vim` and `alacritty`.
+This creates two targets: `vim` and `alacritty`. But notice that we never
+actually provided file paths for either of our targets. Consequently, Chive
+will simply ignore these empty `vim` and `alacritty`.
 
-However, we've already made a mistake! Recall that targets are aliases for
-files. But notice that we never actually provided any file paths for either of
-our targets! Consequently, Chive simply ignores the `vim` and `alacritty`
-targets. After all, how can Chive operate on Vim's configuration file if it
-doesn't know where it is?
-
-To fix this, simply pass in your file paths to Chive's `STDIN`:
+To fix this, simply pass in the file paths to Chive's `STDIN`:
 
 ```console
 $ chive -t vim <<< ~/.vimrc
@@ -94,7 +91,7 @@ $ chive -t alacritty <<< ~/.config/alacritty/alacritty.yml
 alacritty
 vim
 
-# OR
+OR
 
 $ chive -t vim alacritty << EOF
 > $HOME/.vimrc
@@ -105,7 +102,7 @@ vim
 ```
 
 Chive now knows that `vim` manages `~/.vimrc`, and `alacritty` manages
-`~/.config/alacritty/alacritty.yml`!
+`~/.config/alacritty/alacritty.yml`.
 
 <!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
@@ -113,8 +110,7 @@ Chive now knows that `vim` manages `~/.vimrc`, and `alacritty` manages
 
 ### Variant Creation
 
-The next step is to create variants for each of targets. To do this, use the
-`--variant | -v` flag:
+The next step is to create **variants**, or file sections, for each target:
 
 ```console
 $ chive -v solarized gruvbox
@@ -125,10 +121,9 @@ alacritty: added "gruvbox"
 ```
 
 You can see that if we don't specify any targets, the `solarized` and `gruvbox`
-variants are created for all of our targets. If you only want to create
-variants for a particular target, simply add the target's name to the list
-(note that order does not matter, just write them however they pop into your
-head!):
+variants are created for all targets. If you only want to create variants for a
+particular target, simply add the target's name to the list (note that order
+does not matter, just write them however they pop into your head):
 
 ```console
 $ chive -v zenburn vim ayu
@@ -136,28 +131,20 @@ vim: added "zenburn"
 vim: added "ayu"
 ```
 
-As you might have guessed, we've been adding blank variants to Chive this whole
-time. Luckily, we can do what we did before with `STDIN` to add more useful
-variants, right?  Well, yes and no. Unfortunately, when multiple variants get
-involved, things start to break down. In particular, variants are often multi-line,
-so its hard to what data belongs to which variant. Also, cookie-cutter variants typically
-become useless whenever multiple targets are involved.
-
-So what are we supposed to do? Well, here's what I suggest: for creating or
-modifying individual variants, use the `STDIN` approach:
+But empty variants aren't really useful, so let's fix that realy quick. If
+you're adding or changing a single variant, simply pass in data through
+`STDIN`:
 
 ```console
 $ chive -v vim solarized <<< "colorscheme solarized"
 vim: added "solarized"
 
-$ curl ... | chive -v alacritty gruvbox
+$ curl https://raw.githubusercontent.com/eendroroy/alacritty-theme/master/themes/gruvbox_dark.yaml | chive -v alacritty gruvbox
 alacritty: added "gruvbox"
 ```
 
-On the other hand, when working with multiple variants, use the `--edit | -e`
-flag to bring up relevant variants in `fzf` so that you may edit each one:
-
-<!--TODO: Use GIF here-->
+If you're working with multiple variants, use the `--edit | -e` flag to bring
+up relevant variants in `fzf` so that you may edit each one individually:
 
 ```console
 $ chive -e -v solarized zenburn
@@ -167,22 +154,6 @@ $ chive -e -v solarized zenburn
   3/3
 >
   ```
-
-Note that `-v` indicates that you want to *add* new variants. Thus, old
-variants (like `vim/solarized`) won't show up in the `fzf` listing since we
-already added that in the previous command. To modify existing variants,
-specify only the `-e` flag:
-
-```console
-$ chive -e solarized zenburn
-  alacritty/solarized
-  alacritty/zenburn
-> vim/solarized
-> vim/zenburn
-  4/4
->
-  ```
-
 
 ### Variant Switching
 
