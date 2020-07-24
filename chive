@@ -17,20 +17,19 @@ LANG=C
 # Print out help message and exit
 usage() {
     printf '%s\n' "\
-usage: chive [--version] [--help] [-e | --edit] [-l | --list] [-c | --check]
-             [-t | --target <target> ...] [-v | --variant <target> | <variant> ...]
-             [-d | --delete <target> | <variant>] [[<target> ...] <variant>] ...
+usage: chive [options] [targets | variants ...]
 
 Options:
 
-   -t, -target TARGET ...     add targets
-   -v, --variant VARIANT ...  add variants
-   -e, --edit VARIANT ...     edit variants
-   -l, --list VARIANT ...     list variants
-   -c, --check VARIANT ...    check variants
+   -t, --target TARGET ...             add targets
+   -v, --variant TARGET | VARIANT ...  add variants
+   -d, --delete TARGET | VARIANT ...   add targets
+   -e, --edit                          edit variants
+   -c, --check VARIANT ...             check variants
+   -l, --list VARIANT ...              list current variants
 
-   --help                     show version information of $PROG_NAME
-   --version                  show this help and exit"
+   --help                              show version information of $PROG_NAME
+   --version                           show this help and exit"
     exit
 }
 
@@ -417,8 +416,11 @@ v_start() {
     local name nontargets
 
     if (( "$#" == 0 )); then
-        # Nothing was given, so print all the things
-        (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
+        if [[ ! "${ALL_TARGETS[*]}" ]]; then
+            printf '%s\n' "No targets or variants."
+        else
+            (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
+        fi
     else
         # Arguments were specified, so go through the decision process
 
@@ -441,7 +443,7 @@ v_start() {
 
             # Check if nontargets are variants
             for target in "${nontargets[@]}"; do
-                [[ "$(find "$CONFIG_DIR"/* -name "$target" | wc -l)" == 0 ]] && die "unknown target or variant \"$target\""
+                [[ "$(find "$CONFIG_DIR"/* -name "$target" 2>/dev/null | wc -l)" == 0 ]] && die "unknown target or variant \"$target\""
             done
 
             # All nontargets are existing variants, so set them
@@ -454,11 +456,11 @@ main() {
     if [[ ! -d "$CONFIG_DIR" ]]; then
         # Create configuration directory, if needed
         mkdir -p "$CONFIG_DIR"
-    else
-        # Get all variant and target names if configuration directory exists
-        readarray -t ALL_VARIANTS <<< "$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
-        readarray -t ALL_TARGETS <<< "$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
     fi
+
+    # Get all variant and target names if configuration directory exists
+    readarray -t ALL_VARIANTS <<< "$(find "$CONFIG_DIR" -maxdepth 2 -mindepth 2 ! -path "${CONFIG_DIR}/.git" | pathname)"
+    readarray -t ALL_TARGETS <<< "$(find "$CONFIG_DIR" -maxdepth 1 -type d ! -path "$CONFIG_DIR" ! -path "${CONFIG_DIR}/.git" | pathname)"
 
     # Process command-line options/arguments
     while [[ "$1" ]]; do
@@ -474,6 +476,8 @@ main() {
                 exit
             ;;
             "--variant" | "-v")
+                [[ ! "${ALL_TARGETS[*]}" ]] && die "no targets available"
+
                 shift
                 v_add "$@"
                 exit
