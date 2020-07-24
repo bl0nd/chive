@@ -1,7 +1,7 @@
 # Chive
 
-Chive is a variant switcher that allows you to swap out arbitrary file sections
-without any modifications to the original file.
+Chive is a variant switcher that allows you to easily swap out arbitrary file
+sections without requiring any modifications to the original file.
 
 ```sh
 $ chive -t vim alacritty << EOF
