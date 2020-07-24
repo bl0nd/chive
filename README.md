@@ -1,9 +1,9 @@
 # Chive
 
-Chive allows you to switch between **variants** of **targets**:
+Chive is a tool that switches between different versions of file sections.
 
-* A variant is a a file section (e.g., `colorscheme gruvbox`, `PS=❯ `).
-* A target is an alias for a file (e.g., `vim`, `bash`).
+<!--of **targets**: a variant is a file section (e.g., `colorscheme-->
+<!--gruvbox`, `PS=❯ `); a target is an alias for a file (e.g., `vim`, `bash`).-->
 
 <!--## Motivation-->
 
@@ -84,7 +84,7 @@ our targets! Consequently, Chive simply ignores the `vim` and `alacritty`
 targets. After all, how can Chive operate on Vim's configuration file if it
 doesn't know where it is?
 
-To fix this, pass in your file paths to Chive's `STDIN`:
+To fix this, simply pass in your file paths to Chive's `STDIN`:
 
 ```console
 $ chive -t vim <<< ~/.vimrc
