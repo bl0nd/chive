@@ -109,7 +109,7 @@ vim
 ### Variant Creation
 
 Now that Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
-`~/.config/alacritty/alacritty.yml`, the next step is to create **variants**,
+`~/.config/alacritty/alacritty.yml`, the next step is to create **variants**
 for each target:
 
 ```console
