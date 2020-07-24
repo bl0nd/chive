@@ -124,11 +124,11 @@ alacritty: added "solarized"
 alacritty: added "gruvbox"
 ```
 
-We can see that if we don't specify any targets, the `solarized` and `gruvbox`
-variants are created for all of our targets.
-
-If we only want to create variants for a particular target, we just add the
-target's name to the list (note that order does not matter):
+You can see that if we don't specify any targets, the `solarized` and `gruvbox`
+variants are created for all of our targets. If you only want to create
+variants for a particular target, simply add the target's name to the list
+(note that order does not matter, just write them however they pop into your
+head!):
 
 ```console
 $ chive -v zenburn vim ayu
@@ -136,20 +136,17 @@ vim: added "zenburn"
 vim: added "ayu"
 ```
 
-So far, we've only added empty variants. But we can just use `STDIN` to add
-full variants, right? Well, yes and no. Unfortunately, when multiple variants
-get involved, things start to break down: variants are often multi-line, so its
-hard to distinguish between their data, and cookie-cutter variants often don't
-make sense when multiple targets are involved.
+As you might have guessed, we've been adding blank variants to Chive this whole
+time. Luckily, we can do what we did before with `STDIN` to add more useful
+variants, right?  Well, yes and no. Unfortunately, when multiple variants get
+involved, things start to break down. In particular, variants are often multi-line,
+so its hard to what data belongs to which variant. Also, cookie-cutter variants typically
+become useless whenever multiple targets are involved.
 
-Thus, I suggest using `STDIN` only for creating or modifying individual
-variants:
+So what are we supposed to do? Well, here's what I suggest: for creating or
+modifying individual variants, use the `STDIN` approach:
 
 ```console
-$ chive
-alacritty
-vim
-
 $ chive -v vim solarized <<< "colorscheme solarized"
 vim: added "solarized"
 
@@ -157,23 +154,35 @@ $ curl ... | chive -v alacritty gruvbox
 alacritty: added "gruvbox"
 ```
 
-When adding multiple variants, use the `--edit | -e` flag, which will bring up
-all relevant variants in `fzf` so that you may edit each one:
+On the other hand, when working with multiple variants, use the `--edit | -e`
+flag to bring up relevant variants in `fzf` so that you may edit each one:
 
 <!--TODO: Use GIF here-->
 
-  ```console
-  $ chive
-  alacritty
-  vim
-
-  $ chive -e -v solarized zenburn
-    alacritty/solarized
-    alacritty/zenburn
-  > vim/zenburn
-	3/3
-  >
+```console
+$ chive -e -v solarized zenburn
+  alacritty/solarized
+  alacritty/zenburn
+> vim/zenburn
+  3/3
+>
   ```
+
+Note that `-v` indicates that you want to *add* new variants. Thus, old
+variants (like `vim/solarized`) won't show up in the `fzf` listing since we
+already added that in the previous command. To modify existing variants,
+specify only the `-e` flag:
+
+```console
+$ chive -e solarized zenburn
+  alacritty/solarized
+  alacritty/zenburn
+> vim/solarized
+> vim/zenburn
+  4/4
+>
+  ```
+
 
 ### Variant Switching
 
