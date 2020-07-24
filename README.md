@@ -77,32 +77,30 @@ alacritty
 vim
 ```
 
-This creates two targets: `vim` and `alacritty`. But notice that we never
-actually provided file paths for either of our targets. Consequently, Chive
-will simply ignore these empty `vim` and `alacritty`.
+This creates two targets: `vim` and `alacritty`. However, because we  didn't
+provide any file paths for our targets, Chive will simply ignore them. After
+all, if a target doesn't know what it is aliasing, how can Chive know?
 
 To fix this, simply pass in the file paths to Chive's `STDIN`:
 
 ```console
-$ chive -t vim <<< ~/.vimrc
-vim
-
-$ chive -t alacritty <<< ~/.config/alacritty/alacritty.yml
-alacritty
-vim
-
-OR
-
 $ chive -t vim alacritty << EOF
 > $HOME/.vimrc
 > $HOME/.config/alacritty/alacritty.yml
 > EOF
 alacritty
 vim
+
+OR
+
+$ chive -t vim <<< ~/.vimrc
+vim
+
+$ chive -t alacritty <<< ~/.config/alacritty/alacritty.yml
+alacritty
+vim
 ```
 
-Chive now knows that `vim` manages `~/.vimrc`, and `alacritty` manages
-`~/.config/alacritty/alacritty.yml`.
 
 <!--* To have shell expansion and substitution in here strings, don't quote the string.-->
 
@@ -110,7 +108,9 @@ Chive now knows that `vim` manages `~/.vimrc`, and `alacritty` manages
 
 ### Variant Creation
 
-The next step is to create **variants**, or file sections, for each target:
+Now that Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
+`~/.config/alacritty/alacritty.yml`, the next step is to create **variants**,
+for each target:
 
 ```console
 $ chive -v solarized gruvbox
@@ -120,10 +120,9 @@ alacritty: added "solarized"
 alacritty: added "gruvbox"
 ```
 
-You can see that if we don't specify any targets, the `solarized` and `gruvbox`
-variants are created for all targets. If you only want to create variants for a
-particular target, simply add the target's name to the list (note that order
-does not matter, just write them however they pop into your head):
+If you only want to create variants for a particular target, simply add the
+target's name to the list (note that order does not matter, just write them
+however they pop into your head):
 
 ```console
 $ chive -v zenburn vim ayu
@@ -131,28 +130,29 @@ vim: added "zenburn"
 vim: added "ayu"
 ```
 
-But empty variants aren't really useful, so let's fix that realy quick. If
-you're adding or changing a single variant, simply pass in data through
-`STDIN`:
+Now, empty variants aren't really useful, so let's update them with some data:
 
-```console
-$ chive -v vim solarized <<< "colorscheme solarized"
-vim: added "solarized"
+* If you're adding or changing a single variant, simply pass in data through
+  `STDIN`:
 
-$ curl https://raw.githubusercontent.com/eendroroy/alacritty-theme/master/themes/gruvbox_dark.yaml | chive -v alacritty gruvbox
-alacritty: added "gruvbox"
-```
+  ```console
+  $ chive -v vim solarized <<< "colorscheme solarized"
+  vim: added "solarized"
 
-If you're working with multiple variants, use the `--edit | -e` flag to bring
-up relevant variants in `fzf` so that you may edit each one individually:
+  $ curl https://raw.githubusercontent.com/eendroroy/alacritty-theme/master/themes/gruvbox_dark.yaml | chive -v alacritty gruvbox
+  alacritty: added "gruvbox"
+  ```
 
-```console
-$ chive -e -v solarized zenburn
-  alacritty/solarized
-  alacritty/zenburn
-> vim/zenburn
-  3/3
->
+* If you're working with multiple variants, use the `--edit | -e` flag to bring
+  up relevant variants in `fzf` so that you may edit each one individually:
+
+  ```console
+  $ chive -e -v solarized zenburn
+    alacritty/solarized
+    alacritty/zenburn
+  > vim/zenburn
+    3/3
+  >
   ```
 
 ### Variant Switching
