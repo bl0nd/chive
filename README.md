@@ -77,11 +77,10 @@ alacritty
 vim
 ```
 
-This creates two targets: `vim` and `alacritty`. However, because we  didn't
+This creates two targets: `vim` and `alacritty`. However, because we didn't
 provide any file paths for our targets, Chive will simply ignore them. After
-all, if a target doesn't know what it is aliasing, how can Chive know?
-
-To fix this, simply pass in the file paths to Chive's `STDIN`:
+all, if a target doesn't know what it is aliasing, how can Chive know? To fix
+this, simply pass in the file paths to Chive's `STDIN`:
 
 ```console
 $ chive -t vim alacritty << EOF
@@ -108,7 +107,7 @@ vim
 
 ### Variant Creation
 
-Now that Chive knows that `vim` manages `~/.vimrc`, and `alacritty` manages
+Now that Chive knows that `vim` manages `~/.vimrc` and `alacritty` manages
 `~/.config/alacritty/alacritty.yml`, the next step is to create **variants**
 for each target:
 
