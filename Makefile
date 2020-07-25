@@ -2,7 +2,7 @@ PREFIX ?= /usr/local
 MANDIR ?= $(PREFIX)/share/man
 
 all:
-	@echo Run \'make install\' to install Chive.
+	@echo Run \'sudo make install\' to install Chive.
 
 install:
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
