@@ -417,7 +417,7 @@ v_switch() {
 #  * If existing variants and targets are specified, assume the user wants to
 #    set some variants for some targets, and other variants for other targets.
 v_start() {
-    local name nontargets v
+    local f name nontargets target v
     local fzf_arr=()
 
     [[ ! "${ALL_TARGETS[*]}" ]] && {
@@ -470,18 +470,12 @@ v_start() {
             # Clean up the name of nontargets a bit
             read -r -a nontargets <<< "$(tr '\n' ' ' <<< "$nontargets" | sed 's/[ ]*$//')"
 
-            # Check if nontargets are variants
+            # Check if any nontargets are not variants
             for target in "${nontargets[@]}"; do
                 [[ "$(find "$CONFIG_DIR"/* -name "$target" 2>/dev/null | wc -l)" == 0 ]] && die "unknown target or variant \"$target\""
             done
 
-            if [[ "$EDIT" -eq 1 ]]; then
-                # Edit variants
-                echo TODO
-            else
-                # All nontargets are existing variants, so set them
-                v_set "$@"
-            fi
+            v_set "$@"
         fi
     fi
 }
