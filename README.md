@@ -7,6 +7,7 @@ sections without requiring any modifications to the original file.
 $ chive -t vim alacritty << EOF
 $HOME/.vimrc
 $HOME/.config/alacritty/alacritty.yml
+EOF
 
 $ chive -v vim gruvbox <<< "colorscheme gruvbox"
 $ chive -v vim solarized <<< "colorscheme solarized"
