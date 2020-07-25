@@ -7,11 +7,7 @@ sections without requiring any modifications to the original file.
 
 ### Manual
 
-Prerequisites:
-
-* [fzf](https://github.com/junegunn/fzf)
-
-To build and install from source:
+To build and install from source (requires [fzf](https://github.com/junegunn/fzf)):
 
 ```
 git clone https://github.com/bl0nd/chive.git && cd chive
@@ -29,6 +25,30 @@ Chive is also available on many Linux distributions (as `chive`), including:
 * Fedora
 * RHEL
 * Ubuntu
+
+## Notice
+
+Note that to avoid requiring modifications to the original file, Chive requires
+some help from you. In particular, variant switches require that the targeted
+file contains the contents of at least one variant belonging to the target.
+
+For example, suppose I have the following setup (assume that `solarized`
+contains `colorscheme solarized`):
+
+```console
+$ grep colorscheme ~/.vimrc
+colorscheme gruvbox
+
+$ chive
+vim
+└── solarized
+```
+
+I would not be able to run `chive solarized` because there's no way for Chive
+to know where to begin replacing text. To fix this, either change `gruvbox` to
+`solarized` in `~/.vimrc` or create a Gruvbox variant before running the
+command. Either way, Chive will then have a reference point to start from and
+the switch will be successful.
 
 ## Usage
 
@@ -121,30 +141,6 @@ To switch variants for some targets and all other targets:
 ```console
 $ chive vim solarized gruvbox
 ```
-
-#### Important Note
-
-Note that to avoid requiring modifications to the original file, Chive requires
-some help from you. In particular, variant switches require that the targeted
-file contains the contents of at least one variant belonging to the target.
-
-For example, suppose I have the following setup (assume that `solarized`
-contains `colorscheme solarized`):
-
-```console
-$ grep colorscheme ~/.vimrc
-colorscheme gruvbox
-
-$ chive
-vim
-└── solarized
-```
-
-I would not be able to run `chive solarized` because there's no way for Chive
-to know where to begin replacing text. To fix this, either change `gruvbox` to
-`solarized` in `~/.vimrc` or create a Gruvbox variant before running the
-command. Either way, Chive will then have a reference point to start from and
-the switch will be successful.
 
 ### Deletion
 
