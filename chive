@@ -332,7 +332,7 @@ v_set() {
 
 # Switch to a particular variant for targets
 v_switch() {
-    local alt_body alt_vpath begin body end match offset t_path target v_path
+    local alt_body alt_body_pattern alt_vpath begin body body_pattern end match offset t_path target v_path
     local arr=("${!1}")
     local variant="$2"
 
@@ -354,9 +354,10 @@ v_switch() {
 
         # Get variant body
         body="$(no_file_blanks "$v_path")"
+        body_pattern="$(sed 's/[][\.|$(){}?+*^]/\\&/g' <<< "$body")"
 
         # See if the variant's body is being used
-        if pcregrep -M -q "^${body}$" "$t_path"; then
+        if pcregrep -M -q "$body_pattern" "$t_path"; then
             continue
         else
             # The variant is currently not being used, so check if another
@@ -369,6 +370,7 @@ v_switch() {
 
                 # Get variant body
                 alt_body="$(no_file_blanks "$alt_vpath")"
+                alt_body_pattern="$(sed 's/[][\.|$(){}?+*^]/\\&/g' <<< "$alt_body")"
 
                 # Check if variant has a match
                 #
@@ -377,7 +379,7 @@ v_switch() {
                 # path may be invalid or different (though I don't
                 # really see that happening). So just to be safe, we
                 # use t_path.
-                if pcregrep -M -q "^${alt_body}$" "$t_path"; then
+                if pcregrep -M -q "$alt_body_pattern" "$t_path"; then
                     match=1
                     break
                 fi
@@ -385,12 +387,18 @@ v_switch() {
 
             if [[ "$match" -eq 1 ]]; then
                 # Another variant that has a match, so we can switch
-                begin="$(pcregrep -M -n "^${alt_body}$" "$t_path" | head -n 1 | cut -d: -f1)"
+                begin="$(pcregrep -M -n "$alt_body_pattern" "$t_path" | head -n 1 | cut -d: -f1)"
                 offset="$(wc -l <<< "$alt_body")"
                 end=$((begin + offset - 1))
 
                 sed -i "${begin},${end}d" "$t_path"
-                awk -i inplace -v a="$begin" -v b="$body" "NR==a{print b}1" "$t_path"
+                length="$(wc -l "$t_path" | cut -d' ' -f1)"
+
+                if (( "$begin" > "$length" )); then
+                    printf '%s' "$body" >> "$t_path"
+                else
+                    awk -i inplace -v a="$begin" -v b="$body" "NR==a{print b}1" "$t_path"
+                fi
             else
                 # There was no match, so die
                 die "invalid variant: $target-$variant"
