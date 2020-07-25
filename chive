@@ -24,6 +24,7 @@ Options:
    -t, --target  TARGET ...            add targets
    -v, --variant [TARGET] VARIANT ...  add variants
    -e, --edit    [TARGET]              edit variants
+   -d, --delete                        delete targets and variants
 
    --help                              show version information of $PROG_NAME
    --version                           show this help and exit"
