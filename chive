@@ -17,16 +17,13 @@ LANG=C
 # Print out help message and exit
 usage() {
     printf '%s\n' "\
-usage: chive [options] [targets | variants ...]
+usage: chive [OPTION ...] [TARGET | VARIANT ...]
 
 Options:
 
-   -t, --target TARGET ...             add targets
-   -v, --variant TARGET | VARIANT ...  add variants
-   -d, --delete TARGET | VARIANT ...   add targets
-   -e, --edit                          edit variants
-   -c, --check VARIANT ...             check variants
-   -l, --list VARIANT ...              list current variants
+   -t, --target  TARGET ...            add targets
+   -v, --variant [TARGET] VARIANT ...  add variants
+   -e, --edit    [TARGET]              edit variants
 
    --help                              show version information of $PROG_NAME
    --version                           show this help and exit"
@@ -90,7 +87,7 @@ no_file_blanks() {
 
 # Lists out variants in FZF
 v_fzf() {
-    local chosen height rows
+    local chosen height rows cmd="$2" opts="$3"
     local arr=("${!1}") copy=("${arr[@]}")
 
     for i in "${!copy[@]}"; do
@@ -102,7 +99,11 @@ v_fzf() {
         (( "${#chosen}" == 0 )) && break
 
         # Edit variant
-        "$EDITOR" "$CONFIG_DIR/$chosen"
+        if [[ -n "$opts" ]]; then
+            "$cmd" "$opts" "$CONFIG_DIR/$chosen"
+        else
+            "$cmd" "$CONFIG_DIR/$chosen"
+        fi
 
         # Remove already selected entries from listing
         copy=( "${copy[@]/"$chosen"}" )
@@ -234,7 +235,7 @@ v_add() {
         v_create targets[@]
     fi
 
-    [[ "$EDIT" -eq 1 ]] && v_fzf new[@]
+    [[ "$EDIT" -eq 1 ]] && v_fzf new[@] "$EDITOR"
 
     for tv in "${new[@]}"; do
         printf '%s"\n' "$(sed 's/\//: added \"/' <<< "$tv")"
@@ -434,7 +435,7 @@ v_start() {
                 fzf_arr+=("$v")
             done
 
-            v_fzf fzf_arr[@]
+            v_fzf fzf_arr[@] "$EDITOR"
         else
             # List out all variants
             (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- * | color_listing)
@@ -459,7 +460,7 @@ v_start() {
                     done
                 done
 
-                v_fzf fzf_arr[@]
+                v_fzf fzf_arr[@] "$EDITOR"
             else
                 # Only targets were specified, so list their variants
                 (cd "$CONFIG_DIR" && tree -L 1 --charset=utf-8 --noreport -- "$@" | color_listing)
@@ -475,10 +476,27 @@ v_start() {
                 [[ "$(find "$CONFIG_DIR"/* -name "$target" 2>/dev/null | wc -l)" == 0 ]] && die "unknown target or variant \"$target\""
             done
 
+            [[ "$EDIT" -eq 1 ]] && {
+                printf '%s\n' "To edit variants, use \"chive -e\" or \"chive -e TARGET ...\""
+                exit 1
+            }
+
             v_set "$@"
         fi
     fi
 }
+
+
+tv_delete() {
+    [[ "${#@}" -gt 0 ]] && die "--delete does not except any arguments"
+
+    for f in "$CONFIG_DIR"/*/*; do
+        fzf_arr+=("$(sed "s/${CONFIG_DIR//\//\\\/}\///" <<< "$f")")
+    done
+
+    v_fzf fzf_arr[@] "rm" "-rf"
+}
+
 
 main() {
     if [[ ! -d "$CONFIG_DIR" ]]; then
@@ -512,16 +530,16 @@ main() {
             "--edit" | "-e")
                 EDIT=1
             ;;
-            "--check" | "-c")
+            "--delete" | "-d")
                 shift
-                v_check "$@"
+                tv_delete "$@"
                 exit
             ;;
-            "--list" | "-l")
-                shift
-                v_list "$@"
-                exit
-            ;;
+            #"--list" | "-l")
+                #shift
+                #v_list "$@"
+                #exit
+            #;;
             *)
                 break
             ;;
