@@ -5,11 +5,11 @@ sections without requiring any modifications to the original file.
 
 ## Installation
 
-### Preqrequisites
+### Manual
+
+Prerequisites:
 
 * [fzf](https://github.com/junegunn/fzf)
-
-### Manual
 
 To build and install from source:
 
