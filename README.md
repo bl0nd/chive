@@ -3,53 +3,6 @@
 Chive is a variant switcher that allows you to easily swap out arbitrary file
 sections without requiring any modifications to the original file.
 
-```sh
-$ chive -t vim alacritty << EOF
-$HOME/.vimrc
-$HOME/.config/alacritty/alacritty.yml
-EOF
-
-$ chive -v vim gruvbox <<< "colorscheme gruvbox"
-$ chive -v vim solarized <<< "colorscheme solarized"
-
-$ curl ... | chive -v alacritty gruvbox
-$ curl ... | chive -v alacritty solarized
-```
-
-<!--## Motivation-->
-
-<!--Traditionally, you'd more or less maintain entire copies of both files and-->
-<!--switch between the copies manually. However,-->
-
-<!--* The differences between copies are typically small compared to the rest of-->
-  <!--the file, making this approach quite wasteful.-->
-
-<!--* You have to switch copies for each file manually. That is, you have to do-->
-  <!--something like `cp vim-gruvbox ~/.vimrc && cp bash-pure ~/.bashrc`).-->
-
-<!--Most other solutions typically use a version control system such as Git,-->
-<!--tracking different versions of files as branches or commits. However,-->
-
-<!--* This often requires turning `$HOME` or other directories into a Git repository.-->
-
-<!--* If you track changes unrelated to color schemes and prompts, maintaining and-->
-  <!--switching between different versions becomes a lot harder. And even if you-->
-  <!--don't, you'd have to manually exclude the unrelated changes on every-->
-  <!--staging/commit.-->
-
-<!--* It's much too complex for what we're trying to do. You shouldn't need to know-->
-  <!--how commits or branches work just to switch color schemes.-->
-
-<!--Finally, we have programs such as [mondo]() and [pywal](), which more or less-->
-<!--use special template files to replace sections of a file. However,-->
-
-<!--* They typically require modifications to the original file.-->
-
-<!--* They're quite limited in scope (e.g., `mondo` and `pywal` are geared towards-->
-  <!--colors).-->
-
-<!--And so here we are.-->
-
 ## Installation
 
 ### Manual
