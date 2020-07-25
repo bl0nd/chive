@@ -489,12 +489,8 @@ v_start() {
 
 
 tv_delete() {
-    [[ "${#@}" -gt 0 ]] && die "--delete does not except any arguments"
-
-    for f in "$CONFIG_DIR"/*/*; do
-        fzf_arr+=("$(sed "s/${CONFIG_DIR//\//\\\/}\///" <<< "$f")")
-    done
-
+    [[ "${#@}" -gt 0 ]] && die "--delete does not accept any arguments"
+    readarray -t fzf_arr <<< "$(find "$CONFIG_DIR"/* -name ".*" -prune -o -print | sed "s/${CONFIG_DIR//\//\\\/}\///")"
     v_fzf fzf_arr[@] "rm" "-rf"
 }
 
