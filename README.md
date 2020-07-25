@@ -3,6 +3,19 @@
 Chive is a variant switcher that allows you to easily swap out arbitrary file
 sections without requiring any modifications to the original file.
 
+## Table of Contents
+
+   * [Installation](#installation)
+      * [Manual](#manual)
+      * [Packages](#packages)
+   * [Notice](#notice)
+   * [Usage](#usage)
+      * [Targets](#targets)
+      * [Variants](#variants)
+      * [Switching](#switching)
+      * [Deletion](#deletion)
+   * [License](#license)
+
 ## Installation
 
 ### Manual
