@@ -5,6 +5,10 @@ sections without requiring any modifications to the original file.
 
 ## Installation
 
+### Preqrequisites
+
+* [fzf](https://github.com/junegunn/fzf)
+
 ### Manual
 
 To build and install from source:
@@ -117,6 +121,8 @@ To switch variants for some targets and all other targets:
 ```console
 $ chive vim solarized gruvbox
 ```
+
+#### Important Note
 
 Note that to avoid requiring modifications to the original file, Chive requires
 some help from you. In particular, variant switches require that the targeted
