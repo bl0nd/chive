@@ -28,12 +28,12 @@ Chive is also available on many Linux distributions (as `chive`), including:
 
 ## Notice
 
-Note that to avoid requiring modifications to the original file, Chive requires
-some help from you. In particular, variant switches require that the targeted
-file contains the contents of at least one variant belonging to the target.
+To avoid requiring modifications to the original file, Chive does require some
+help from you. In particular, variant switches require that the targeted file
+contains the contents of at least one variant belonging to the target.
 
-For example, suppose I have the following setup (assume that `solarized`
-contains `colorscheme solarized`):
+For example, suppose I have the following setup (`solarized` contains
+`colorscheme solarized`):
 
 ```console
 $ grep colorscheme ~/.vimrc
