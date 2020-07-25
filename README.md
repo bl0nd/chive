@@ -8,7 +8,7 @@ sections without requiring any modifications to the original file.
    * [Installation](#installation)
       * [Manual](#manual)
       * [Packages](#packages)
-   * [Notice](#notice)
+   * [With Great Power...](#with-great-power)
    * [Usage](#usage)
       * [Targets](#targets)
       * [Variants](#variants)
@@ -39,7 +39,7 @@ Chive is also available on many Linux distributions (as `chive`), including:
 * RHEL
 * Ubuntu
 
-## Notice
+## With Great Power...
 
 To avoid requiring modifications to the original file, Chive does require some
 help from you. In particular, variant switches require that the targeted file
