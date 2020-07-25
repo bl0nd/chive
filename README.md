@@ -119,7 +119,7 @@ $ chive vim solarized gruvbox
 ```
 
 
-# Deletion
+### Deletion
 
 To delete targets or variants, `-d` will bring up an `fzf` listing so that you
 may choose which to delete:
