@@ -1,10 +1,9 @@
 # Chive
 
 Chive is a variant switcher that allows you to easily swap out arbitrary file
-sections with custom data, without requiring modifications to the original
-file.
+sections without requiring any modifications to the original file.
 
-```console
+```sh
 $ chive -t vim alacritty << EOF
 $HOME/.vimrc
 $HOME/.config/alacritty/alacritty.yml
