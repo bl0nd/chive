@@ -1,9 +1,10 @@
 # Chive
 
-![Demo](https://github.com/bl0nd/chive/raw/master/doc/demo.gif)
+<p align="center">
+    A variant switcher for swapping out arbitrary file sections.
+</p>
 
-Chive is a variant switcher that allows you to easily swap out arbitrary file
-sections without requiring any modifications to the original file.
+![Demo](https://github.com/bl0nd/chive/raw/master/doc/demo.gif)
 
 ## Table of Contents
 
