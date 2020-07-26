@@ -1,5 +1,3 @@
-# Chive
-
 <p align="center">
   <h1 align="center">Chive</h1>
   <p align="center">A Bash script for swapping out arbitrary file sections.</p>
