@@ -4,8 +4,7 @@
     A variant switcher for swapping out arbitrary file sections.
 </p>
 
-<!--![Demo](https://github.com/bl0nd/chive/raw/master/doc/demo.gif)-->
-[[ https://github.com/bl0nd/chive/raw/master/doc/demo.gif | height = 500px ]]
+![Demo](https://github.com/bl0nd/chive/raw/master/doc/demo.gif | width=500)
 
 ## Table of Contents
 
