@@ -1,6 +1,6 @@
 # Chive
 
-<p align="center"> A variant switcher for swapping out arbitrary file sections. </p>
+<p align="center"> A Bash script for swapping out arbitrary file sections. </p>
 
 <p align="center">
 <a href="BADGE"><img src="https://img.shields.io/badge/bash-4.3%2B-blue"></a>
@@ -36,16 +36,16 @@ make
 sudo make install
 ```
 
-### Packages
+<!--### Packages-->
 
-Chive is also available on many Linux distributions (as `chive`), including:
+<!--Chive is also available on many Linux distributions (as `chive`), including:-->
 
-* Arch Linux
-* CentOS
-* Debian
-* Fedora
-* RHEL
-* Ubuntu
+<!--* Arch Linux-->
+<!--* CentOS-->
+<!--* Debian-->
+<!--* Fedora-->
+<!--* RHEL-->
+<!--* Ubuntu-->
 
 ## With Great Power...
 
