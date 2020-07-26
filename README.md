@@ -2,7 +2,7 @@
 
 <p align="center">
     A variant switcher for swapping out arbitrary file sections.
-    <img src="/doc/demo.gif" width="1000" height="700"/>
+    <img src="/doc/demo.gif" width="800" height="450"/>
 </p>
 
 ## Table of Contents
