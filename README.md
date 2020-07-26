@@ -45,7 +45,7 @@ To avoid requiring modifications to the original file, Chive does require some
 help from you. In particular, variant switches require that the targeted file
 contains the contents of at least one variant belonging to the target.
 
-For example, suppose I have the following setup (`solarized` contains
+For example, suppose you have the following setup (`solarized` contains
 `colorscheme solarized`):
 
 ```console
@@ -57,8 +57,8 @@ vim
 └── solarized
 ```
 
-I would not be able to run `chive solarized` because there's no way for Chive
-to know where to begin replacing text. To fix this, either change `gruvbox` to
+Running `chive solarized` will fail because there's no way for Chive to know
+where to begin replacing text. To fix this, either change `gruvbox` to
 `solarized` in `~/.vimrc` or create a Gruvbox variant before running the
 command. Either way, Chive will then have a reference point to start from and
 the switch will be successful.
