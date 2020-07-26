@@ -32,7 +32,6 @@ To build and install from source (requires [fzf](https://github.com/junegunn/fzf
 
 ```
 git clone https://github.com/bl0nd/chive.git && cd chive
-make
 sudo make install
 ```
 
