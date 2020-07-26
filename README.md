@@ -3,9 +3,9 @@
 <p align="center"> A variant switcher for swapping out arbitrary file sections. </p>
 
 <p align="center">
-<a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 <a href="https://github.com/bl0nd/chive/releases"><img src="https://img.shields.io/github/release/bl0nd/bl0nd.svg"></a>
-<!--<a href="https://repology.org/metapackage/bl0nd"><img src="https://repology.org/badge/tiny-repos/bl0nd.svg" alt="Packaging status"></a>-->
+<a href="https://repology.org/metapackage/bl0nd"><img src="https://repology.org/badge/tiny-repos/bl0nd.svg" alt="Packaging status"></a>
 </p>
 
 <p align="center"> <img src="/doc/demo.gif" width="800" height="450"/> </p>
