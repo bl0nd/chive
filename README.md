@@ -2,10 +2,8 @@
 
 <p align="center">
     A variant switcher for swapping out arbitrary file sections.
+    <img src="/doc/demo.gif" width="1000" height="700"/>
 </p>
-
-<!--![](https://github.com/bl0nd/chive/raw/master/doc/demo.gif | width=500)-->
-<img src="/doc/demo.gif" width="500" height="300"/>
 
 ## Table of Contents
 
