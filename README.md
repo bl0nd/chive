@@ -1,12 +1,13 @@
 # Chive
 
-<p align="center"> A Bash script for swapping out arbitrary file sections. </p>
-
 <p align="center">
-<a href="BADGE"><img src="https://img.shields.io/badge/bash-4.3%2B-blue"></a>
-<a href="https://github.com/bl0nd/chive/releases"><img src="https://img.shields.io/badge/release-v0.1.1-blue"></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-<!--<a href="https://repology.org/metapackage/bl0nd"><img src="https://repology.org/badge/tiny-repos/bl0nd.svg" alt="Packaging status"></a>-->
+  <h1 align="center">Chive</h1>
+  <p align="center">A Bash script for swapping out arbitrary file sections.</p>
+  <p align="center">
+    <a href="BADGE"><img src="https://img.shields.io/badge/bash-4.3%2B-blue"></a>
+    <a href="https://github.com/bl0nd/chive/releases"><img src="https://img.shields.io/badge/release-v0.1.1-blue"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  </p>
 </p>
 
 <p align="center"> <img src="/doc/demo.gif" width="800" height="450"/> </p>
