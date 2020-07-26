@@ -1,6 +1,6 @@
 # Chive
 
-[[ doc/demo.gif ]]
+[[ https://github.com/bl0nd/chive/blob/master/doc/demo.gif ]]
 
 Chive is a variant switcher that allows you to easily swap out arbitrary file
 sections without requiring any modifications to the original file.
