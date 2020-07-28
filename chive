@@ -497,9 +497,43 @@ v_start() {
 
 
 tv_delete() {
+    local chosen height rows variant
+
     [[ "${#@}" -gt 0 ]] && die "--delete does not accept any arguments"
+
+    # Gather all targets and variants
     readarray -t fzf_arr <<< "$(find "$CONFIG_DIR"/* -name ".*" -prune -o -print | sed "s/${CONFIG_DIR//\//\\\/}\///")"
-    v_fzf fzf_arr[@] "rm" "-rf"
+
+    # List targets and variants
+    local copy=("${fzf_arr[@]}")
+
+    for i in "${!copy[@]}"; do
+        rows="$(tr ' ' '\n' <<< "${copy[@]}" | awk 'NF')"
+        height=$(($(wc -l <<< "$rows") + 2))
+        chosen="$(fzf -0 --height="$height" <<< "$rows")"
+
+        (( "${#chosen}" == 0 )) && break
+
+        if in_array ALL_TARGETS[@] "$chosen"; then
+            # Delete all of the variants and .config of this target, then
+            # delete the target itself with rmdir. This is to avoid `rm -rf`.
+            for variant in "${fzf_arr[@]}"; do
+                if [[ "$variant" == $chosen/* ]]; then
+                    rm "$CONFIG_DIR/$variant" 2>/dev/null
+                    copy=( "${copy[@]/"$variant"}" )
+                fi
+            done
+
+            rm "$CONFIG_DIR/$chosen/.config" 2>/dev/null
+            rmdir "$CONFIG_DIR/$chosen" 2>/dev/null
+        else
+            # Delete variant
+            rm "$CONFIG_DIR/$chosen"
+        fi
+
+        # Remove already selected entries from listing
+        copy=( "${copy[@]/"$chosen"}" )
+    done
 }
 
 
