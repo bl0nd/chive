@@ -86,7 +86,7 @@ $ chive vim gruvbox
 $ chive vim solarized alacritty gruvbox
 
 # vim = zenburn | others = solarized
-$ chive vim zenburn gruvbox
+$ chive vim zenburn solarized
 ```
 
 ## Installation
